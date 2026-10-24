@@ -249,7 +249,7 @@ export async function processPendingEmails(
       // Si no hay API Key configurada, marcar error de infraestructura y suspender
       const errMessage = "RESEND_API_KEY no está configurada en las variables de entorno.";
       for (const row of claimedRows) {
-        await client
+        const updateResult = await client
           .update(emailOutbox)
           .set({
             status: "pending",
@@ -261,18 +261,30 @@ export async function processPendingEmails(
             and(
               eq(emailOutbox.id, row.id),
               eq(emailOutbox.status, "processing"),
-              eq(emailOutbox.leaseToken, row.leaseToken)
+              eq(emailOutbox.leaseToken, row.leaseToken),
+              gte(emailOutbox.nextAttemptAt, sql`NOW()`)
             )
-          );
+          )
+          .returning({ id: emailOutbox.id });
 
-        summary.retried++;
-        summary.details.push({
-          id: row.id,
-          eventType: row.eventType,
-          recipient: "[PROTECTED]",
-          status: "retried",
-          error: errMessage,
-        });
+        if (updateResult && updateResult.length > 0) {
+          summary.retried++;
+          summary.details.push({
+            id: row.id,
+            eventType: row.eventType,
+            recipient: "[PROTECTED]",
+            status: "retried",
+            error: errMessage,
+          });
+        } else {
+          summary.details.push({
+            id: row.id,
+            eventType: row.eventType,
+            recipient: "[PROTECTED]",
+            status: "failed",
+            error: "Propiedad de lease perdida al intentar reprogramar por falta de RESEND_API_KEY.",
+          });
+        }
       }
       return summary;
     }
@@ -325,7 +337,7 @@ export async function processPendingEmails(
           parseErr instanceof Error ? parseErr.message : "Error al descifrar payload"
         );
 
-        // Fallo no recuperable: marcar terminal 'failed' verificando leaseToken
+        // Fallo no recuperable: marcar terminal 'failed' verificando leaseToken y vigencia del lease
         const failResult = await client
           .update(emailOutbox)
           .set({
@@ -338,7 +350,8 @@ export async function processPendingEmails(
             and(
               eq(emailOutbox.id, row.id),
               eq(emailOutbox.status, "processing"),
-              eq(emailOutbox.leaseToken, row.leaseToken)
+              eq(emailOutbox.leaseToken, row.leaseToken),
+              gte(emailOutbox.nextAttemptAt, sql`NOW()`)
             )
           )
           .returning({ id: emailOutbox.id });
@@ -348,6 +361,10 @@ export async function processPendingEmails(
           detail.status = "failed";
           detail.error = errorMsg;
           detail.terminal = true;
+          summary.details.push(detail);
+        } else {
+          detail.status = "failed";
+          detail.error = "Propiedad de lease perdida al intentar marcar fallo por payload inválido.";
           summary.details.push(detail);
         }
         continue;
@@ -424,7 +441,7 @@ export async function processPendingEmails(
         throw new Error("Resend no devolvió un identificador de mensaje válido.");
       }
 
-      // 3.5 Éxito confirmado: actualizar outbox con verificación de leaseToken, invalidar propiedad y sanitizar
+      // 3.5 Éxito confirmado: actualizar outbox con verificación de leaseToken, vigencia temporal, invalidar propiedad y sanitizar
       const updateResult = await client
         .update(emailOutbox)
         .set({
@@ -440,7 +457,8 @@ export async function processPendingEmails(
           and(
             eq(emailOutbox.id, row.id),
             eq(emailOutbox.status, "processing"),
-            eq(emailOutbox.leaseToken, row.leaseToken)
+            eq(emailOutbox.leaseToken, row.leaseToken),
+            gte(emailOutbox.nextAttemptAt, sql`NOW()`)
           )
         )
         .returning({ id: emailOutbox.id });
@@ -473,7 +491,8 @@ export async function processPendingEmails(
             and(
               eq(emailOutbox.id, row.id),
               eq(emailOutbox.status, "processing"),
-              eq(emailOutbox.leaseToken, row.leaseToken)
+              eq(emailOutbox.leaseToken, row.leaseToken),
+              gte(emailOutbox.nextAttemptAt, sql`NOW()`)
             )
           )
           .returning({ id: emailOutbox.id });
@@ -483,6 +502,9 @@ export async function processPendingEmails(
           detail.status = "failed";
           detail.error = errorMsg;
           detail.terminal = true;
+        } else {
+          detail.status = "failed";
+          detail.error = `Error al despachar (${errorMsg}), pero se perdió la propiedad del lease antes de persistir failed.`;
         }
       } else {
         // Estado transitorio: reprogramar con espera progresiva
@@ -501,7 +523,8 @@ export async function processPendingEmails(
             and(
               eq(emailOutbox.id, row.id),
               eq(emailOutbox.status, "processing"),
-              eq(emailOutbox.leaseToken, row.leaseToken)
+              eq(emailOutbox.leaseToken, row.leaseToken),
+              gte(emailOutbox.nextAttemptAt, sql`NOW()`)
             )
           )
           .returning({ id: emailOutbox.id });
@@ -510,6 +533,9 @@ export async function processPendingEmails(
           summary.retried++;
           detail.status = "retried";
           detail.error = errorMsg;
+        } else {
+          detail.status = "retried";
+          detail.error = `Error recuperable (${errorMsg}), pero se perdió la propiedad del lease antes de reprogramar.`;
         }
       }
     }

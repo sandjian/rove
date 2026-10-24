@@ -114,6 +114,8 @@ interface RecordedUpdateOp {
 interface MockOutboxDbOptions {
   simulateLostLeaseOnRenewal?: boolean;
   simulateLostLeaseOnFinalize?: boolean;
+  simulateLostLeaseOnMissingApiKey?: boolean;
+  simulateLostLeaseOnPayloadError?: boolean;
   throwOnUpdate?: Error;
   onUpdate?: (updates: Record<string, unknown>, whereClause?: unknown) => void;
   isLocked?: boolean;
@@ -204,6 +206,25 @@ function createMockOutboxDb(
 
           // Renovación de lease: contiene nextAttemptAt sin status
           if (isRenewal && options.simulateLostLeaseOnRenewal) {
+            return createMockUpdateBuilder(undefined, []);
+          }
+
+          // Ausencia de API key: contiene status 'pending' y lastError con RESEND_API_KEY
+          if (
+            options.simulateLostLeaseOnMissingApiKey &&
+            updates.status === "pending" &&
+            String(updates.lastError || "").includes("RESEND_API_KEY")
+          ) {
+            return createMockUpdateBuilder(undefined, []);
+          }
+
+          // Payload corrupto: contiene status 'failed' y lastError con descifrado/payload
+          if (
+            options.simulateLostLeaseOnPayloadError &&
+            updates.status === "failed" &&
+            (String(updates.lastError || "").toLowerCase().includes("payload") ||
+             String(updates.lastError || "").toLowerCase().includes("descifrado"))
+          ) {
             return createMockUpdateBuilder(undefined, []);
           }
 
@@ -420,11 +441,18 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
       summary.details[0].error?.includes("perdió la propiedad del lease antes de persistir sent")
     );
 
-    // Verificación de que la finalización sent condicionó por lease_token e invalidó propiedad
+    // Verificación de que la finalización sent condicionó por id, status, lease_token, vigencia temporal e invalidó propiedad
     const sentOp = recordedUpdateOps.find((op) => op.isFinalize && op.updates.status === "sent");
     assert.ok(sentOp, "Debe haber intentado la actualización 'sent'");
-    assert.ok(sentOp.sql.includes('"email_outbox"."lease_token" = $'));
-    assert.ok(sentOp.params.includes(capturedClaimTokens[0]));
+    assert.ok(sentOp.sql.includes('"email_outbox"."id" = $'), "Debe condicionar por id");
+    assert.ok(sentOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
+    assert.ok(sentOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
+    assert.ok(
+      sentOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+    );
+    assert.ok(sentOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
+    assert.ok(sentOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
     assert.equal(sentOp.updates.leaseToken, null, "Debe invalidar leaseToken al finalizar");
   });
 
@@ -453,11 +481,21 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(summary.sent, 0);
     assert.equal(summary.retried, 0);
     assert.equal(summary.failed, 0);
+    assert.ok(
+      summary.details[0].error?.includes("perdió la propiedad del lease antes de reprogramar")
+    );
 
     const retryOp = recordedUpdateOps.find((op) => op.isFinalize && op.updates.status === "pending");
     assert.ok(retryOp, "Debe haber intentado registrar reintento");
-    assert.ok(retryOp.sql.includes('"email_outbox"."lease_token" = $'));
-    assert.ok(retryOp.params.includes(capturedClaimTokens[0]));
+    assert.ok(retryOp.sql.includes('"email_outbox"."id" = $'), "Debe condicionar por id");
+    assert.ok(retryOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
+    assert.ok(retryOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
+    assert.ok(
+      retryOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+    );
+    assert.ok(retryOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
+    assert.ok(retryOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
     assert.equal(retryOp.updates.leaseToken, null, "Debe invalidar leaseToken en reintento");
   });
 
@@ -1156,5 +1194,245 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     });
 
     assert.equal(touchedRecipient, "not_modified");
+  });
+
+  // =========================================================================
+  // Sección 9 — Pruebas de Auditoría de Leases Temporales (Fase 5A)
+  // =========================================================================
+
+  // 32. El marcado de fallo definitivo ('failed') condiciona estrictamente id, status, lease_token y next_attempt_at >= NOW()
+  it("Auditoría 32: marcado de fallo definitivo condiciona id, status, lease_token y next_attempt_at >= NOW() y no incrementa failed si afecta 0 filas", async () => {
+    const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-fail-lease",
+      appointmentId: "appt-fail-lease",
+      payload: encryptedPayload,
+    });
+
+    const { mockDb, capturedClaimTokens, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
+      simulateLostLeaseOnFinalize: true, // Simula que el lease expiró al actualizar
+    });
+    const { mockClient } = createMockResendClient({
+      sendResult: {
+        data: null,
+        error: { message: "validation_error: invalid email domain", statusCode: 422 },
+      },
+    });
+
+    const summary = await processPendingEmails({
+      client: mockDb,
+      resendClient: mockClient,
+    });
+
+    assert.equal(summary.claimed, 1);
+    assert.equal(summary.sent, 0);
+    assert.equal(summary.retried, 0);
+    assert.equal(summary.failed, 0, "No debe registrar failed si la actualización afectó 0 filas");
+    assert.ok(
+      summary.details[0].error?.includes("perdió la propiedad del lease antes de persistir failed")
+    );
+
+    // Verificación de SQL generado con PgDialect
+    const failOp = recordedUpdateOps.find((op) => op.isFinalize && op.updates.status === "failed");
+    assert.ok(failOp, "Debe haber intentado la actualización 'failed'");
+    assert.ok(failOp.sql.includes('"email_outbox"."id" = $'), "Debe condicionar por id");
+    assert.ok(failOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
+    assert.ok(failOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
+    assert.ok(
+      failOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+    );
+    assert.ok(failOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
+    assert.ok(failOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
+    assert.equal(failOp.updates.leaseToken, null, "Debe invalidar leaseToken al finalizar");
+  });
+
+  // 33. Ausencia de RESEND_API_KEY exige lease vigente (next_attempt_at >= NOW()) y maneja 0 filas
+  it("Auditoría 33: ausencia de RESEND_API_KEY exige id, status, lease_token y next_attempt_at >= NOW() y no incrementa retried si afecta 0 filas", async () => {
+    const originalKey = process.env.RESEND_API_KEY;
+    delete process.env.RESEND_API_KEY;
+
+    try {
+      const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
+      const sampleItem = createSampleOutboxItem({
+        id: "outbox-no-key-lost-lease",
+        appointmentId: "appt-no-key-lost-lease",
+        payload: encryptedPayload,
+      });
+
+      const { mockDb, capturedClaimTokens, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
+        simulateLostLeaseOnMissingApiKey: true,
+      });
+
+      const summary = await processPendingEmails({
+        client: mockDb,
+      });
+
+      assert.equal(summary.claimed, 1);
+      assert.equal(summary.sent, 0);
+      assert.equal(summary.retried, 0, "No debe registrar retried si la actualización afectó 0 filas");
+      assert.ok(
+        summary.details[0].error?.includes("Propiedad de lease perdida al intentar reprogramar")
+      );
+
+      const noKeyOp = recordedUpdateOps.find(
+        (op) => op.isFinalize && op.updates.status === "pending" && String(op.updates.lastError || "").includes("RESEND_API_KEY")
+      );
+      assert.ok(noKeyOp, "Debe haber intentado la reprogramación por falta de API key");
+      assert.ok(noKeyOp.sql.includes('"email_outbox"."id" = $'), "Debe condicionar por id");
+      assert.ok(noKeyOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
+      assert.ok(noKeyOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
+      assert.ok(
+        noKeyOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
+        "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+      );
+      assert.ok(noKeyOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
+      assert.ok(noKeyOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
+    } finally {
+      process.env.RESEND_API_KEY = originalKey;
+    }
+  });
+
+  // 34. Payload corrupto / fallo de descifrado exige lease vigente (next_attempt_at >= NOW()) y maneja 0 filas
+  it("Auditoría 34: payload corrupto exige id, status, lease_token y next_attempt_at >= NOW() y no incrementa failed si afecta 0 filas", async () => {
+    const corruptedPayload = {
+      iv: "123456789012345678901234",
+      tag: "12345678901234567890123456789012",
+      ciphertext: "badbeefcafe",
+    };
+
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-corrupted-lost-lease",
+      appointmentId: "appt-corrupted-lost-lease",
+      payload: corruptedPayload,
+    });
+
+    const { mockDb, capturedClaimTokens, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
+      simulateLostLeaseOnPayloadError: true,
+    });
+    const { mockClient } = createMockResendClient({});
+
+    const summary = await processPendingEmails({
+      client: mockDb,
+      resendClient: mockClient,
+    });
+
+    assert.equal(summary.claimed, 1);
+    assert.equal(summary.sent, 0);
+    assert.equal(summary.retried, 0);
+    assert.equal(summary.failed, 0, "No debe registrar failed si la actualización afectó 0 filas");
+    assert.ok(
+      summary.details[0].error?.includes("Propiedad de lease perdida al intentar marcar fallo")
+    );
+
+    const payloadErrOp = recordedUpdateOps.find(
+      (op) => op.isFinalize && op.updates.status === "failed" && String(op.updates.lastError || "").includes("Descifrado fallido")
+    );
+    assert.ok(payloadErrOp, "Debe haber intentado marcar fallo por payload inválido");
+    assert.ok(payloadErrOp.sql.includes('"email_outbox"."id" = $'), "Debe condicionar por id");
+    assert.ok(payloadErrOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
+    assert.ok(payloadErrOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
+    assert.ok(
+      payloadErrOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+    );
+    assert.ok(payloadErrOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
+    assert.ok(payloadErrOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
+  });
+
+  // 35. Concurrencia entre workers: Worker 1 con lease expirado no puede sobrescribir a Worker 2 con token nuevo
+  it("Auditoría 35: concurrencia: worker antiguo no puede sobrescribir a un nuevo worker que reclamó con nuevo token", async () => {
+    const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-two-workers-race",
+      appointmentId: "appt-race",
+      payload: encryptedPayload,
+    });
+
+    // Simular que el worker 1 pierde el lease en la finalización porque worker 2 tomó el registro
+    const { mockDb: dbWorker1, capturedClaimTokens: tokensWorker1 } = createMockOutboxDb([sampleItem], {
+      simulateLostLeaseOnFinalize: true, // Afecta 0 filas para worker 1
+    });
+
+    // Simular que el worker 2 tiene el lease legítimo
+    const { mockDb: dbWorker2, capturedClaimTokens: tokensWorker2 } = createMockOutboxDb([sampleItem]);
+
+    const { mockClient } = createMockResendClient({
+      sendResult: { data: { id: "resend-msg-race" }, error: null },
+    });
+
+    // Worker 1 ejecuta pero su lease expiró antes de persistir
+    const summary1 = await processPendingEmails({
+      client: dbWorker1,
+      resendClient: mockClient,
+    });
+
+    // Worker 2 ejecuta con lease vigente
+    const summary2 = await processPendingEmails({
+      client: dbWorker2,
+      resendClient: mockClient,
+    });
+
+    // Worker 1 detectó pérdida de propiedad y no incrementó sent
+    assert.equal(summary1.claimed, 1);
+    assert.equal(summary1.sent, 0);
+    assert.ok(summary1.details[0].error?.includes("perdió la propiedad del lease"));
+
+    // Worker 2 finalizó exitosamente
+    assert.equal(summary2.claimed, 1);
+    assert.equal(summary2.sent, 1);
+    assert.equal(summary2.details[0].status, "sent");
+
+    // Los tokens reclamados por cada worker fueron completamente distintos
+    assert.notEqual(tokensWorker1[0], tokensWorker2[0]);
+  });
+
+  // 36. Actualizaciones que afectan cero filas nunca incrementan contadores de éxito ni confirmación
+  it("Auditoría 36: ninguna actualización que afecte cero filas incrementa contadores de éxito ni transición", async () => {
+    const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-zero-rows-metrics",
+      appointmentId: "appt-zero-rows",
+      payload: encryptedPayload,
+    });
+
+    // 1. Caso sent afectando 0 filas
+    const { mockDb: dbSentZero } = createMockOutboxDb([sampleItem], {
+      simulateLostLeaseOnFinalize: true,
+    });
+    const { mockClient: clientSent } = createMockResendClient({
+      sendResult: { data: { id: "resend-msg-ok" }, error: null },
+    });
+    const summarySent = await processPendingEmails({
+      client: dbSentZero,
+      resendClient: clientSent,
+    });
+    assert.equal(summarySent.sent, 0, "sent debe permanecer 0 si afectó 0 filas");
+
+    // 2. Caso retry transitorio afectando 0 filas
+    const { mockDb: dbRetryZero } = createMockOutboxDb([sampleItem], {
+      simulateLostLeaseOnFinalize: true,
+    });
+    const { mockClient: clientRetry } = createMockResendClient({
+      throwError: new Error("503 Service Unavailable"),
+    });
+    const summaryRetry = await processPendingEmails({
+      client: dbRetryZero,
+      resendClient: clientRetry,
+    });
+    assert.equal(summaryRetry.retried, 0, "retried debe permanecer 0 si afectó 0 filas");
+
+    // 3. Caso failure permanente afectando 0 filas
+    const { mockDb: dbFailZero } = createMockOutboxDb([sampleItem], {
+      simulateLostLeaseOnFinalize: true,
+    });
+    const { mockClient: clientFail } = createMockResendClient({
+      sendResult: { data: null, error: { message: "validation_error", statusCode: 400 } },
+    });
+    const summaryFail = await processPendingEmails({
+      client: dbFailZero,
+      resendClient: clientFail,
+    });
+    assert.equal(summaryFail.failed, 0, "failed debe permanecer 0 si afectó 0 filas");
   });
 });
