@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { eq, and, or, lte, gte, asc, sql } from "drizzle-orm";
+import type { PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { Resend } from "resend";
 import { db, type DrizzleDb } from "../../db";
 import { emailOutbox } from "../../db/schema";
@@ -198,6 +199,77 @@ export async function claimPendingOutboxRows(
 }
 
 /**
+ * Ejecuta de forma atómica la transición de estado o actualización de un registro de outbox reclamado.
+ *
+ * Garantías de concurrencia en PostgreSQL (READ COMMITTED):
+ * 1. Adquiere primero un bloqueo de fila exclusivo (SELECT ... FOR UPDATE) sobre el id del registro.
+ *    Si otra transacción tiene bloqueada la fila, espera hasta que se libere el bloqueo.
+ * 2. Una vez adquirido el bloqueo, PostgreSQL garantiza que el worker tiene la versión confirmada
+ *    más reciente (vía EvalPlanQual si hubo actualización concurrente previa).
+ * 3. Valida en la fila bloqueada:
+ *    - Existencia del registro.
+ *    - status === 'processing'.
+ *    - leaseToken === row.leaseToken (no fue reclamado ni modificado por otro worker).
+ *    - nextAttemptAt >= clock_timestamp() (el lease sigue vigente según el reloj real evaluado
+ *      DESPUÉS de haber obtenido el bloqueo).
+ * 4. Si el lease expiró durante la espera o la titularidad cambió, la función retorna false
+ *    de inmediato sin ejecutar ninguna modificación (UPDATE).
+ * 5. Si la validación es exitosa, ejecuta el UPDATE dentro de la misma transacción reteniendo el
+ *    bloqueo de fila y aplicando condiciones WHERE redundantes de seguridad con .returning({ id }).
+ * 6. La transacción se abre y se cierra exclusivamente durante la actualización (microtransacción),
+ *    manteniendo las llamadas de red externas (Resend) totalmente desacopladas y fuera de la transacción.
+ */
+export async function executeAtomicLeaseTransition(
+  client: DrizzleDb,
+  row: Pick<ClaimedOutboxItem, "id" | "leaseToken">,
+  setValues: PgUpdateSetSource<typeof emailOutbox>
+): Promise<boolean> {
+  return await client.transaction(async (tx) => {
+    // 1. Obtener bloqueo de fila exclusivo mediante SELECT ... FOR UPDATE antes de validar el lease.
+    // En PostgreSQL, la expresión de proyección se evalúa para la fila bloqueada tras adquirir el bloqueo.
+    const lockedRows = await tx
+      .select({
+        id: emailOutbox.id,
+        status: emailOutbox.status,
+        leaseToken: emailOutbox.leaseToken,
+        nextAttemptAt: emailOutbox.nextAttemptAt,
+        isLeaseValid: sql<boolean>`${emailOutbox.nextAttemptAt} >= clock_timestamp()`,
+      })
+      .from(emailOutbox)
+      .where(eq(emailOutbox.id, row.id))
+      .for("update");
+
+    const lockedRow = lockedRows[0];
+
+    // 2. Validar titularidad y vigencia temporal real tras adquirir el bloqueo
+    if (
+      !lockedRow ||
+      lockedRow.status !== "processing" ||
+      lockedRow.leaseToken !== row.leaseToken ||
+      !lockedRow.isLeaseValid
+    ) {
+      return false;
+    }
+
+    // 3. Ejecutar la actualización dentro de la misma transacción mientras se retiene el bloqueo
+    const updateResult = await tx
+      .update(emailOutbox)
+      .set(setValues)
+      .where(
+        and(
+          eq(emailOutbox.id, row.id),
+          eq(emailOutbox.status, "processing"),
+          eq(emailOutbox.leaseToken, row.leaseToken),
+          gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
+        )
+      )
+      .returning({ id: emailOutbox.id });
+
+    return Boolean(updateResult && updateResult.length > 0);
+  });
+}
+
+/**
  * Procesa las notificaciones pendientes de email_outbox y las despacha vía Resend.
  *
  * Garantías:
@@ -249,25 +321,14 @@ export async function processPendingEmails(
       // Si no hay API Key configurada, marcar error de infraestructura y suspender
       const errMessage = "RESEND_API_KEY no está configurada en las variables de entorno.";
       for (const row of claimedRows) {
-        const updateResult = await client
-          .update(emailOutbox)
-          .set({
-            status: "pending",
-            nextAttemptAt: sql`clock_timestamp() + INTERVAL '1 minute'`,
-            lastError: errMessage,
-            leaseToken: null,
-          })
-          .where(
-            and(
-              eq(emailOutbox.id, row.id),
-              eq(emailOutbox.status, "processing"),
-              eq(emailOutbox.leaseToken, row.leaseToken),
-              gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
-            )
-          )
-          .returning({ id: emailOutbox.id });
+        const updateResult = await executeAtomicLeaseTransition(client, row, {
+          status: "pending",
+          nextAttemptAt: sql`clock_timestamp() + INTERVAL '1 minute'`,
+          lastError: errMessage,
+          leaseToken: null,
+        });
 
-        if (updateResult && updateResult.length > 0) {
+        if (updateResult) {
           summary.retried++;
           summary.details.push({
             id: row.id,
@@ -304,23 +365,12 @@ export async function processPendingEmails(
     try {
       // 3.0 Verificar y renovar el lease para este registro antes del despacho de red.
       // Exige coincidencia de ID, status 'processing', leaseToken y que el lease siga vigente según clock_timestamp().
-      const renewed = await client
-        .update(emailOutbox)
-        .set({
-          nextAttemptAt: sql`clock_timestamp() + (${lockTimeoutMinutes} || ' minutes')::interval`,
-        })
-        .where(
-          and(
-            eq(emailOutbox.id, row.id),
-            eq(emailOutbox.status, "processing"),
-            eq(emailOutbox.leaseToken, row.leaseToken),
-            gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
-          )
-        )
-        .returning({ id: emailOutbox.id });
+      const renewed = await executeAtomicLeaseTransition(client, row, {
+        nextAttemptAt: sql`clock_timestamp() + (${lockTimeoutMinutes} || ' minutes')::interval`,
+      });
 
-      // Si afectó cero filas, el worker perdió la propiedad del lease: detener procesamiento de inmediato
-      if (!renewed || renewed.length === 0) {
+      // Si afectó cero filas o el lease expiró, el worker perdió la propiedad del lease: detener procesamiento de inmediato
+      if (!renewed) {
         summary.retried++;
         detail.status = "retried";
         detail.error = "Propiedad de lease perdida antes del despacho; procesamiento detenido.";
@@ -338,25 +388,14 @@ export async function processPendingEmails(
         );
 
         // Fallo no recuperable: marcar terminal 'failed' verificando leaseToken y vigencia real del lease
-        const failResult = await client
-          .update(emailOutbox)
-          .set({
-            status: "failed",
-            attemptCount: row.attemptCount + 1,
-            lastError: errorMsg,
-            leaseToken: null,
-          })
-          .where(
-            and(
-              eq(emailOutbox.id, row.id),
-              eq(emailOutbox.status, "processing"),
-              eq(emailOutbox.leaseToken, row.leaseToken),
-              gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
-            )
-          )
-          .returning({ id: emailOutbox.id });
+        const failResult = await executeAtomicLeaseTransition(client, row, {
+          status: "failed",
+          attemptCount: row.attemptCount + 1,
+          lastError: errorMsg,
+          leaseToken: null,
+        });
 
-        if (failResult && failResult.length > 0) {
+        if (failResult) {
           summary.failed++;
           detail.status = "failed";
           detail.error = errorMsg;
@@ -442,28 +481,17 @@ export async function processPendingEmails(
       }
 
       // 3.5 Éxito confirmado: actualizar outbox con verificación de leaseToken, vigencia temporal, invalidar propiedad y sanitizar
-      const updateResult = await client
-        .update(emailOutbox)
-        .set({
-          status: "sent",
-          sentAt: sql`clock_timestamp()`,
-          providerMessageId,
-          lastError: null,
-          recipient: "[REDACTED]",
-          payload: { sanitized: true, sentAt: new Date().toISOString() },
-          leaseToken: null,
-        })
-        .where(
-          and(
-            eq(emailOutbox.id, row.id),
-            eq(emailOutbox.status, "processing"),
-            eq(emailOutbox.leaseToken, row.leaseToken),
-            gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
-          )
-        )
-        .returning({ id: emailOutbox.id });
+      const sentResult = await executeAtomicLeaseTransition(client, row, {
+        status: "sent",
+        sentAt: sql`clock_timestamp()`,
+        providerMessageId,
+        lastError: null,
+        recipient: "[REDACTED]",
+        payload: { sanitized: true, sentAt: new Date().toISOString() },
+        leaseToken: null,
+      });
 
-      if (!updateResult || updateResult.length === 0) {
+      if (!sentResult) {
         detail.error = "Envío aceptado por Resend pero se perdió la propiedad del lease antes de persistir sent.";
       } else {
         summary.sent++;
@@ -479,25 +507,14 @@ export async function processPendingEmails(
 
       if (isPermanent || newAttemptCount >= maxAttempts) {
         // Estado terminal: 'failed'
-        const updateResult = await client
-          .update(emailOutbox)
-          .set({
-            status: "failed",
-            attemptCount: newAttemptCount,
-            lastError: errorMsg,
-            leaseToken: null,
-          })
-          .where(
-            and(
-              eq(emailOutbox.id, row.id),
-              eq(emailOutbox.status, "processing"),
-              eq(emailOutbox.leaseToken, row.leaseToken),
-              gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
-            )
-          )
-          .returning({ id: emailOutbox.id });
+        const failedResult = await executeAtomicLeaseTransition(client, row, {
+          status: "failed",
+          attemptCount: newAttemptCount,
+          lastError: errorMsg,
+          leaseToken: null,
+        });
 
-        if (updateResult && updateResult.length > 0) {
+        if (failedResult) {
           summary.failed++;
           detail.status = "failed";
           detail.error = errorMsg;
@@ -510,26 +527,15 @@ export async function processPendingEmails(
         // Estado transitorio: reprogramar con espera progresiva
         // NOTA: El payload y recipient NO se sanitizan aquí para permitir el reintento futuro.
         const backoffMinutes = calculateBackoffMinutes(newAttemptCount);
-        const updateResult = await client
-          .update(emailOutbox)
-          .set({
-            status: "pending",
-            attemptCount: newAttemptCount,
-            nextAttemptAt: sql`clock_timestamp() + (${backoffMinutes} || ' minutes')::interval`,
-            lastError: errorMsg,
-            leaseToken: null,
-          })
-          .where(
-            and(
-              eq(emailOutbox.id, row.id),
-              eq(emailOutbox.status, "processing"),
-              eq(emailOutbox.leaseToken, row.leaseToken),
-              gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
-            )
-          )
-          .returning({ id: emailOutbox.id });
+        const retryResult = await executeAtomicLeaseTransition(client, row, {
+          status: "pending",
+          attemptCount: newAttemptCount,
+          nextAttemptAt: sql`clock_timestamp() + (${backoffMinutes} || ' minutes')::interval`,
+          lastError: errorMsg,
+          leaseToken: null,
+        });
 
-        if (updateResult && updateResult.length > 0) {
+        if (retryResult) {
           summary.retried++;
           detail.status = "retried";
           detail.error = errorMsg;

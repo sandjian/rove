@@ -116,6 +116,8 @@ interface MockOutboxDbOptions {
   simulateLostLeaseOnFinalize?: boolean;
   simulateLostLeaseOnMissingApiKey?: boolean;
   simulateLostLeaseOnPayloadError?: boolean;
+  simulateExpiredLeaseOnLock?: boolean;
+  simulateStolenLeaseOnLock?: boolean;
   throwOnUpdate?: Error;
   onUpdate?: (updates: Record<string, unknown>, whereClause?: unknown) => void;
   isLocked?: boolean;
@@ -134,19 +136,114 @@ function createMockOutboxDb(
   const capturedClaimTokens: string[] = [];
   const recordedUpdateOps: RecordedUpdateOp[] = [];
   const capturedClaimSelectOps: Array<{ sql: string; params: unknown[] }> = [];
+  const capturedLockSelectOps: Array<{ sql: string; params: unknown[] }> = [];
   const capturedClaimUpdateOps: Array<{ updates: Record<string, unknown>; sql: string; params: unknown[] }> = [];
   const dialect = new PgDialect();
+
+  const handleUpdate = (updates: Record<string, unknown>, whereClause?: unknown) => {
+    let whereSql = "";
+    let whereParams: unknown[] = [];
+    if (whereClause) {
+      const query = dialect.sqlToQuery(whereClause as SQL);
+      whereSql = query.sql;
+      whereParams = query.params;
+    }
+
+    // Reclamación inicial: actualiza a 'processing' y asigna leaseToken
+    if (updates.leaseToken && !("status" in updates && updates.status !== "processing")) {
+      const targetId = whereParams[0] as string;
+      const targetRow = rows.find((r) => r.id === targetId);
+      if (targetRow) {
+        targetRow.status = "processing";
+        targetRow.leaseToken = updates.leaseToken as string;
+        targetRow.nextAttemptAt = new Date(Date.now() + 5 * 60 * 1000);
+      }
+      capturedClaimTokens.push(updates.leaseToken as string);
+      capturedClaimUpdateOps.push({ updates, sql: whereSql, params: whereParams });
+      return createMockUpdateBuilder();
+    }
+
+    // Transición atómica de lease (renovación, sent, failed, retry, missing key)
+    if (options.throwOnUpdate) {
+      throw options.throwOnUpdate;
+    }
+    if (options.onUpdate) {
+      options.onUpdate(updates, whereClause);
+    }
+
+    const isRenewal = "nextAttemptAt" in updates && !("status" in updates);
+    const isFinalize = "status" in updates;
+
+    recordedUpdateOps.push({
+      updates,
+      sql: whereSql,
+      params: whereParams,
+      isRenewal,
+      isFinalize,
+    });
+
+    // Renovación de lease: contiene nextAttemptAt sin status
+    if (isRenewal && options.simulateLostLeaseOnRenewal) {
+      return createMockUpdateBuilder(undefined, []);
+    }
+
+    // Ausencia de API key: contiene status 'pending' y lastError con RESEND_API_KEY
+    if (
+      options.simulateLostLeaseOnMissingApiKey &&
+      updates.status === "pending" &&
+      String(updates.lastError || "").includes("RESEND_API_KEY")
+    ) {
+      return createMockUpdateBuilder(undefined, []);
+    }
+
+    // Payload corrupto: contiene status 'failed' y lastError con descifrado/payload
+    if (
+      options.simulateLostLeaseOnPayloadError &&
+      updates.status === "failed" &&
+      (String(updates.lastError || "").toLowerCase().includes("payload") ||
+       String(updates.lastError || "").toLowerCase().includes("descifrado"))
+    ) {
+      return createMockUpdateBuilder(undefined, []);
+    }
+
+    // Finalización (sent, failed, pending retry): contiene status
+    if (isFinalize && options.simulateLostLeaseOnFinalize) {
+      return createMockUpdateBuilder(undefined, []);
+    }
+
+    // Actualizar estado en mock rows si tuvo éxito
+    const targetId = whereParams[0] as string;
+    const targetRow = rows.find((r) => r.id === targetId);
+    if (targetRow) {
+      if ("status" in updates) targetRow.status = updates.status as "pending" | "processing" | "sent" | "failed";
+      if ("leaseToken" in updates) targetRow.leaseToken = updates.leaseToken as string | null;
+    }
+
+    return createMockUpdateBuilder(undefined, [{ id: "mock-id" }]);
+  };
 
   const mockDb = {
     transaction: async <T>(callback: (tx: unknown) => Promise<T>): Promise<T> => {
       const mockTx = {
-        select: () => ({
+        select: (fields?: unknown) => ({
           from: () => ({
             where: (whereClause?: unknown) => {
+              let whereSql = "";
+              let whereParams: unknown[] = [];
               if (whereClause) {
                 const query = dialect.sqlToQuery(whereClause as SQL);
-                capturedClaimSelectOps.push({ sql: query.sql, params: query.params });
+                whereSql = query.sql;
+                whereParams = query.params;
               }
+
+              const isLockRowById = Boolean(fields && whereSql.includes('"email_outbox"."id" = $'));
+
+              if (!isLockRowById) {
+                capturedClaimSelectOps.push({ sql: whereSql, params: whereParams });
+              } else {
+                capturedLockSelectOps.push({ sql: whereSql, params: whereParams });
+              }
+
               return {
                 orderBy: () => ({
                   limit: (limit: number) => ({
@@ -166,26 +263,55 @@ function createMockOutboxDb(
                     },
                   }),
                 }),
+                for: () => {
+                  // Bloqueo de fila individual por ID (SELECT ... FOR UPDATE)
+                  const targetId = whereParams[0] as string;
+                  const targetRow = rows.find((r) => r.id === targetId);
+                  if (!targetRow) {
+                    return Promise.resolve([]);
+                  }
+
+                  if (options.simulateStolenLeaseOnLock) {
+                    return Promise.resolve([
+                      {
+                        id: targetRow.id,
+                        status: targetRow.status,
+                        leaseToken: "stolen-worker-token",
+                        nextAttemptAt: targetRow.nextAttemptAt,
+                        isLeaseValid: true,
+                      },
+                    ]);
+                  }
+
+                  if (options.simulateExpiredLeaseOnLock) {
+                    return Promise.resolve([
+                      {
+                        id: targetRow.id,
+                        status: targetRow.status,
+                        leaseToken: targetRow.leaseToken,
+                        nextAttemptAt: new Date(Date.now() - 10000),
+                        isLeaseValid: false,
+                      },
+                    ]);
+                  }
+
+                  return Promise.resolve([
+                    {
+                      id: targetRow.id,
+                      status: targetRow.status,
+                      leaseToken: targetRow.leaseToken,
+                      nextAttemptAt: targetRow.nextAttemptAt,
+                      isLeaseValid: true,
+                    },
+                  ]);
+                },
               };
             },
           }),
         }),
         update: () => ({
           set: (updates: Record<string, unknown>) => ({
-            where: (whereClause?: unknown) => {
-              if (updates.leaseToken) {
-                capturedClaimTokens.push(updates.leaseToken as string);
-              }
-              let whereSql = "";
-              let whereParams: unknown[] = [];
-              if (whereClause) {
-                const query = dialect.sqlToQuery(whereClause as SQL);
-                whereSql = query.sql;
-                whereParams = query.params;
-              }
-              capturedClaimUpdateOps.push({ updates, sql: whereSql, params: whereParams });
-              return createMockUpdateBuilder();
-            },
+            where: (whereClause?: unknown) => handleUpdate(updates, whereClause),
           }),
         }),
       };
@@ -193,64 +319,7 @@ function createMockOutboxDb(
     },
     update: () => ({
       set: (updates: Record<string, unknown>) => ({
-        where: (whereClause: unknown) => {
-          if (options.throwOnUpdate) {
-            throw options.throwOnUpdate;
-          }
-          if (options.onUpdate) {
-            options.onUpdate(updates, whereClause);
-          }
-
-          let whereSql = "";
-          let whereParams: unknown[] = [];
-          if (whereClause) {
-            const query = dialect.sqlToQuery(whereClause as SQL);
-            whereSql = query.sql;
-            whereParams = query.params;
-          }
-
-          const isRenewal = "nextAttemptAt" in updates && !("status" in updates);
-          const isFinalize = "status" in updates;
-
-          recordedUpdateOps.push({
-            updates,
-            sql: whereSql,
-            params: whereParams,
-            isRenewal,
-            isFinalize,
-          });
-
-          // Renovación de lease: contiene nextAttemptAt sin status
-          if (isRenewal && options.simulateLostLeaseOnRenewal) {
-            return createMockUpdateBuilder(undefined, []);
-          }
-
-          // Ausencia de API key: contiene status 'pending' y lastError con RESEND_API_KEY
-          if (
-            options.simulateLostLeaseOnMissingApiKey &&
-            updates.status === "pending" &&
-            String(updates.lastError || "").includes("RESEND_API_KEY")
-          ) {
-            return createMockUpdateBuilder(undefined, []);
-          }
-
-          // Payload corrupto: contiene status 'failed' y lastError con descifrado/payload
-          if (
-            options.simulateLostLeaseOnPayloadError &&
-            updates.status === "failed" &&
-            (String(updates.lastError || "").toLowerCase().includes("payload") ||
-             String(updates.lastError || "").toLowerCase().includes("descifrado"))
-          ) {
-            return createMockUpdateBuilder(undefined, []);
-          }
-
-          // Finalización (sent, failed, pending retry): contiene status
-          if (isFinalize && options.simulateLostLeaseOnFinalize) {
-            return createMockUpdateBuilder(undefined, []);
-          }
-
-          return createMockUpdateBuilder(undefined, [{ id: "mock-id" }]);
-        },
+        where: (whereClause: unknown) => handleUpdate(updates, whereClause),
       }),
     }),
   };
@@ -261,6 +330,7 @@ function createMockOutboxDb(
     capturedClaimTokens,
     recordedUpdateOps,
     capturedClaimSelectOps,
+    capturedLockSelectOps,
     capturedClaimUpdateOps,
   };
 }
@@ -1586,6 +1656,154 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(
       retryNextAttemptQuery.params.includes(5),
       "Debe vincular los minutos de backoff correspondientes (5 minutos para intento 2)"
+    );
+  });
+
+  // 40. executeAtomicLeaseTransition ejecuta SELECT ... FOR UPDATE sobre la fila específica antes de actualizar
+  it("Auditoría 40: executeAtomicLeaseTransition ejecuta SELECT ... FOR UPDATE sobre la fila antes de evaluar y actualizar", async () => {
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-lock-first",
+      status: "processing",
+      leaseToken: "valid-token-lock",
+      nextAttemptAt: new Date(Date.now() + 60000),
+    });
+
+    const { mockDb, capturedLockSelectOps, recordedUpdateOps } = createMockOutboxDb([sampleItem]);
+
+    const result = await processPendingEmails({
+      client: mockDb,
+      resendClient: createMockResendClient({}).mockClient,
+    });
+
+    assert.ok(result.claimed === 0, "No debe reclamar porque nextAttemptAt está en el futuro");
+
+    // Invocar directamente executeAtomicLeaseTransition para auditar la secuencia de bloqueo
+    const { executeAtomicLeaseTransition } = await import("../lib/services/email-outbox");
+    const transitionSuccess = await executeAtomicLeaseTransition(
+      mockDb,
+      { id: sampleItem.id, leaseToken: "valid-token-lock" },
+      { status: "sent", sentAt: new Date() }
+    );
+
+    assert.equal(transitionSuccess, true, "La transición atómica debe tener éxito si el lease es válido");
+    assert.ok(capturedLockSelectOps.length > 0, "Debe haber ejecutado una consulta de bloqueo de fila");
+    assert.ok(
+      capturedLockSelectOps[0].sql.includes('"email_outbox"."id" = $'),
+      "El bloqueo debe consultar explícitamente por id de la fila"
+    );
+    assert.ok(
+      capturedLockSelectOps[0].params.includes("outbox-lock-first"),
+      "El parámetro del bloqueo debe coincidir con el id exacto de la fila"
+    );
+    assert.ok(
+      recordedUpdateOps.length > 0,
+      "Debe haber ejecutado el UPDATE una vez adquirido el bloqueo y validado el lease"
+    );
+  });
+
+  // 41. Si el lease expira durante la espera por el bloqueo, executeAtomicLeaseTransition no ejecuta ningún UPDATE
+  it("Auditoría 41: si el lease expira durante la espera por el bloqueo, aborta sin ejecutar ningún UPDATE", async () => {
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-expire-during-lock",
+      status: "processing",
+      leaseToken: "worker-token-blocked",
+      nextAttemptAt: new Date(Date.now() + 1000), // Originalmente vigente al momento de reclamar
+    });
+
+    // Simular que mientras esperaba el bloqueo de fila, el lease expiró (isLeaseValid: false)
+    const { mockDb, capturedLockSelectOps, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
+      simulateExpiredLeaseOnLock: true,
+    });
+
+    const { executeAtomicLeaseTransition } = await import("../lib/services/email-outbox");
+    const transitionSuccess = await executeAtomicLeaseTransition(
+      mockDb,
+      { id: sampleItem.id, leaseToken: "worker-token-blocked" },
+      { status: "sent", sentAt: new Date() }
+    );
+
+    assert.equal(
+      transitionSuccess,
+      false,
+      "executeAtomicLeaseTransition DEBE fallar si el lease expiró durante la espera"
+    );
+    assert.ok(capturedLockSelectOps.length > 0, "Debe haber intentado bloquear la fila");
+    assert.equal(
+      recordedUpdateOps.length,
+      0,
+      "NO debe ejecutarse ninguna sentencia UPDATE si el lease expiró tras adquirir el bloqueo"
+    );
+  });
+
+  // 42. Si otro worker reclama la fila durante la espera por el bloqueo, aborta sin ejecutar ningún UPDATE
+  it("Auditoría 42: si otro worker tomó el lease durante la espera, aborta sin ejecutar ningún UPDATE", async () => {
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-stolen-during-lock",
+      status: "processing",
+      leaseToken: "worker-1-token",
+      nextAttemptAt: new Date(Date.now() + 60000),
+    });
+
+    // Simular que otro worker (Worker 2) tomó el registro y cambió el token mientras Worker 1 esperaba el bloqueo
+    const { mockDb, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
+      simulateStolenLeaseOnLock: true,
+    });
+
+    const { executeAtomicLeaseTransition } = await import("../lib/services/email-outbox");
+    const transitionSuccess = await executeAtomicLeaseTransition(
+      mockDb,
+      { id: sampleItem.id, leaseToken: "worker-1-token" },
+      { status: "sent", sentAt: new Date() }
+    );
+
+    assert.equal(
+      transitionSuccess,
+      false,
+      "executeAtomicLeaseTransition DEBE fallar si el leaseToken cambió durante la espera"
+    );
+    assert.equal(
+      recordedUpdateOps.length,
+      0,
+      "NO debe ejecutarse ninguna sentencia UPDATE si la titularidad del token fue transferida a otro worker"
+    );
+  });
+
+  // 43. Flujo completo: expiración de lease durante la espera en renovación detiene despacho a Resend
+  it("Auditoría 43: expiración de lease durante la espera en renovación detiene despacho a Resend y no muta fila", async () => {
+    const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-renew-wait-expire",
+      appointmentId: "appt-renew-expire",
+      payload: encryptedPayload,
+    });
+
+    let resendCalled = false;
+    const { mockDb, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
+      simulateExpiredLeaseOnLock: true, // El lock revela que expiró mientras esperaba
+    });
+    const { mockClient } = createMockResendClient({
+      onSend: () => {
+        resendCalled = true;
+      },
+    });
+
+    const summary = await processPendingEmails({
+      client: mockDb,
+      resendClient: mockClient,
+    });
+
+    assert.equal(summary.claimed, 1);
+    assert.equal(summary.sent, 0);
+    assert.equal(summary.retried, 1);
+    assert.equal(resendCalled, false, "Resend NUNCA debe ser invocado si el lease expiró durante la espera");
+    assert.ok(
+      summary.details[0].error?.includes("Propiedad de lease perdida antes del despacho"),
+      "Debe registrar error de propiedad de lease perdida"
+    );
+    assert.equal(
+      recordedUpdateOps.length,
+      0,
+      "Ninguna sentencia UPDATE de renovación debe ejecutarse si el lease expiró tras el bloqueo"
     );
   });
 });
