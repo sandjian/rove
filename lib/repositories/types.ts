@@ -1,5 +1,5 @@
 import type { Service, AvailabilityWindow, Appointment } from "../db/schema";
-import type { DrizzleDb } from "../db";
+import type { DrizzleDb, DrizzleTransaction } from "../db";
 
 /**
  * Interfaz de consulta para el catálogo de servicios.
@@ -45,11 +45,10 @@ export interface DbReader {
     appointments: AppointmentsQueryInterface;
   };
 }
-
 /**
  * Cliente de base de datos aceptado por los repositorios.
  */
-export type DatabaseClient = DrizzleDb | DbReader;
+export type DatabaseClient = DrizzleDb | DrizzleTransaction | DbReader;
 
 /**
  * Parámetros para la consulta unificada de datos del motor de disponibilidad.

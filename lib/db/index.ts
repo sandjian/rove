@@ -9,6 +9,9 @@ if (!neonConfig.webSocketConstructor) {
 }
 
 export type DrizzleDb = ReturnType<typeof drizzle<typeof schema>>;
+export type DrizzleTransaction = Parameters<
+  Parameters<DrizzleDb["transaction"]>[0]
+>[0];
 
 let poolInstance: Pool | null = null;
 let dbInstance: DrizzleDb | null = null;
