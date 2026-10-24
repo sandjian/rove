@@ -1,5 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import {
   processPendingEmails,
   formatDateTimeBuenosAires,
@@ -7,6 +9,9 @@ import {
   isPermanentError,
   parseAndDecryptOutboxPayload,
   calculateBackoffMinutes,
+  escapeHtml,
+  renderCustomerConfirmationEmail,
+  renderBarberNotificationEmail,
   type ResendClientInterface,
   type SendEmailPayload,
   type SendEmailResult,
@@ -98,6 +103,14 @@ function createSampleOutboxItem(overrides: Partial<EmailOutboxItem> = {}): Email
   };
 }
 
+interface RecordedUpdateOp {
+  updates: Record<string, unknown>;
+  sql: string;
+  params: unknown[];
+  isRenewal: boolean;
+  isFinalize: boolean;
+}
+
 interface MockOutboxDbOptions {
   simulateLostLeaseOnRenewal?: boolean;
   simulateLostLeaseOnFinalize?: boolean;
@@ -107,7 +120,8 @@ interface MockOutboxDbOptions {
 }
 
 /**
- * Cliente de base de datos simulado para pruebas completas del worker de outbox y control de leases.
+ * Cliente de base de datos simulado para pruebas completas del worker de outbox.
+ * Inspecciona y valida las condiciones SQL reales (where) generadas por Drizzle mediante PgDialect.
  */
 function createMockOutboxDb(
   initialRows: EmailOutboxItem[],
@@ -116,6 +130,8 @@ function createMockOutboxDb(
   const rows = initialRows.map((r) => ({ ...r }));
   let locked = options.isLocked ?? false;
   const capturedClaimTokens: string[] = [];
+  const recordedUpdateOps: RecordedUpdateOp[] = [];
+  const dialect = new PgDialect();
 
   const mockDb = {
     transaction: async <T>(callback: (tx: unknown) => Promise<T>): Promise<T> => {
@@ -167,14 +183,31 @@ function createMockOutboxDb(
             options.onUpdate(updates, whereClause);
           }
 
-          // Renovación de lease: contiene nextAttemptAt sin status
+          let whereSql = "";
+          let whereParams: unknown[] = [];
+          if (whereClause) {
+            const query = dialect.sqlToQuery(whereClause as SQL);
+            whereSql = query.sql;
+            whereParams = query.params;
+          }
+
           const isRenewal = "nextAttemptAt" in updates && !("status" in updates);
+          const isFinalize = "status" in updates;
+
+          recordedUpdateOps.push({
+            updates,
+            sql: whereSql,
+            params: whereParams,
+            isRenewal,
+            isFinalize,
+          });
+
+          // Renovación de lease: contiene nextAttemptAt sin status
           if (isRenewal && options.simulateLostLeaseOnRenewal) {
             return createMockUpdateBuilder(undefined, []);
           }
 
           // Finalización (sent, failed, pending retry): contiene status
-          const isFinalize = "status" in updates;
           if (isFinalize && options.simulateLostLeaseOnFinalize) {
             return createMockUpdateBuilder(undefined, []);
           }
@@ -185,7 +218,7 @@ function createMockOutboxDb(
     }),
   };
 
-  return { mockDb: mockDb as unknown as DrizzleDb, rows, capturedClaimTokens };
+  return { mockDb: mockDb as unknown as DrizzleDb, rows, capturedClaimTokens, recordedUpdateOps };
 }
 
 describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
@@ -204,7 +237,7 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
   };
 
   // =========================================================================
-  // Sección 8 — 15 Pruebas Obligatorias de Auditoría Correctiva
+  // Sección 8 — Pruebas de Auditoría de Lease y Control de Propiedad
   // =========================================================================
 
   // 1. Reclamación de una fila con un token de lease único generado criptográficamente
@@ -260,8 +293,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.notEqual(capturedClaimTokens[0], capturedClaimTokens[1]);
   });
 
-  // 3. Worker que pierde el lease antes de renovar
-  it("Auditoría 3: detecta pérdida de lease si las condiciones de renovación no se cumplen", async () => {
+  // 3. Worker que pierde el lease antes de renovar y verificación de condiciones SQL de renovación
+  it("Auditoría 3: renovación condiciona explícitamente id, status, lease_token y next_attempt_at >= NOW()", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-lost-renew",
@@ -269,8 +302,7 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
       payload: encryptedPayload,
     });
 
-    // Simula que la renovación afecta 0 filas (lease expiró o token no coincide)
-    const { mockDb } = createMockOutboxDb([sampleItem], {
+    const { mockDb, capturedClaimTokens, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
       simulateLostLeaseOnRenewal: true,
     });
     const { mockClient, sentEmails } = createMockResendClient({});
@@ -285,6 +317,22 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(summary.retried, 1);
     assert.equal(sentEmails.length, 0);
     assert.ok(summary.details[0].error?.includes("Propiedad de lease perdida"));
+
+    // Verificación profunda de las condiciones SQL reales de renovación
+    const renewalOp = recordedUpdateOps.find((op) => op.isRenewal);
+    assert.ok(renewalOp, "Debe haberse ejecutado una operación de renovación de lease");
+    assert.ok(renewalOp.sql.includes('"email_outbox"."id" = $'), "Debe condicionar por id");
+    assert.ok(renewalOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status");
+    assert.ok(renewalOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
+    assert.ok(
+      renewalOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+    );
+    assert.ok(
+      renewalOp.params.includes(capturedClaimTokens[0]),
+      "Debe incluir el token de lease exacto en los parámetros"
+    );
+    assert.ok(renewalOp.params.includes("processing"), "Debe exigir status 'processing'");
   });
 
   // 4. Renovación que afecta cero filas: no se envía el correo
@@ -344,8 +392,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.notEqual(capturedClaimTokens[0], "old-abandoned-worker-token");
   });
 
-  // 6. Worker antiguo que intenta marcar 'sent' después de perder la propiedad: no modifica la fila
-  it("Auditoría 6: worker antiguo que perdió propiedad no sobrescribe estado al intentar marcar 'sent'", async () => {
+  // 6. Worker antiguo que intenta marcar 'sent' después de perder la propiedad: no modifica la fila y valida SQL
+  it("Auditoría 6: worker antiguo que perdió propiedad no sobrescribe estado al intentar marcar 'sent' (valida leaseToken en SQL)", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-stale-sent",
@@ -354,7 +402,7 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     });
 
     // Simula que la actualización de finalización sent afecta 0 filas (otro worker cambió el token)
-    const { mockDb } = createMockOutboxDb([sampleItem], {
+    const { mockDb, capturedClaimTokens, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
       simulateLostLeaseOnFinalize: true,
     });
     const { mockClient } = createMockResendClient({
@@ -371,9 +419,16 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(
       summary.details[0].error?.includes("perdió la propiedad del lease antes de persistir sent")
     );
+
+    // Verificación de que la finalización sent condicionó por lease_token e invalidó propiedad
+    const sentOp = recordedUpdateOps.find((op) => op.isFinalize && op.updates.status === "sent");
+    assert.ok(sentOp, "Debe haber intentado la actualización 'sent'");
+    assert.ok(sentOp.sql.includes('"email_outbox"."lease_token" = $'));
+    assert.ok(sentOp.params.includes(capturedClaimTokens[0]));
+    assert.equal(sentOp.updates.leaseToken, null, "Debe invalidar leaseToken al finalizar");
   });
 
-  // 7. Worker antiguo que intenta registrar un error o reintento después de perder la propiedad: no modifica la fila
+  // 7. Worker antiguo que intenta registrar un error o reintento después de perder la propiedad
   it("Auditoría 7: worker antiguo que perdió propiedad no sobrescribe estado al intentar registrar error o reintento", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
@@ -382,8 +437,7 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
       payload: encryptedPayload,
     });
 
-    // Simula fallo en Resend y pérdida de lease al finalizar el error (0 filas afectadas)
-    const { mockDb } = createMockOutboxDb([sampleItem], {
+    const { mockDb, capturedClaimTokens, recordedUpdateOps } = createMockOutboxDb([sampleItem], {
       simulateLostLeaseOnFinalize: true,
     });
     const { mockClient } = createMockResendClient({
@@ -396,10 +450,15 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     });
 
     assert.equal(summary.claimed, 1);
-    // Al afectar 0 filas, no debe computar retried ni failed como operación efectiva
     assert.equal(summary.sent, 0);
     assert.equal(summary.retried, 0);
     assert.equal(summary.failed, 0);
+
+    const retryOp = recordedUpdateOps.find((op) => op.isFinalize && op.updates.status === "pending");
+    assert.ok(retryOp, "Debe haber intentado registrar reintento");
+    assert.ok(retryOp.sql.includes('"email_outbox"."lease_token" = $'));
+    assert.ok(retryOp.params.includes(capturedClaimTokens[0]));
+    assert.equal(retryOp.updates.leaseToken, null, "Debe invalidar leaseToken en reintento");
   });
 
   // 8. Dos workers que intentan reclamar trabajos simultáneamente
@@ -411,7 +470,6 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
       payload: encryptedPayload,
     });
 
-    // Instancia con exclusión mutua de bloqueo simulada
     let locked = false;
     const createLockedDb = () =>
       createMockOutboxDb([sampleItem], {
@@ -558,7 +616,7 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     const sampleItem = createSampleOutboxItem({
       id: "outbox-payload-recipient",
       appointmentId: "appt-secret",
-      recipient: "[ENCRYPTED_IN_PAYLOAD]", // En BD nunca figura el correo real
+      recipient: "[ENCRYPTED_IN_PAYLOAD]",
       payload: encryptedPayload,
     });
 
@@ -607,7 +665,6 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
 
   // 14. Conservación de la compatibilidad con los formatos de payload realmente existentes
   it("Auditoría 14: compatible con filas legacy (recipient en texto claro sin recipientEmail en payload)", async () => {
-    // Formato legacy anterior: payload sin recipientEmail
     const legacyCustomerData = {
       customerName: "Lucas Silva",
       customerEmail: "lucas.legacy@example.com",
@@ -625,7 +682,7 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     const legacyItem = createSampleOutboxItem({
       id: "outbox-legacy-format",
       appointmentId: "appt-legacy",
-      recipient: "lucas.legacy@example.com", // Columna con correo legacy
+      recipient: "lucas.legacy@example.com",
       payload: encryptedPayload,
     });
 
@@ -661,11 +718,88 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
   });
 
   // =========================================================================
+  // Sección 5 — Pruebas de Seguridad: Escapado HTML contra XSS en Templates
+  // =========================================================================
+
+  // 16. escapeHtml escapa caracteres especiales (<, >, &, ", ')
+  it("Auditoría XSS 16: escapeHtml escapa rigurosamente caracteres peligrosos en HTML", () => {
+    const raw = `<script>alert("XSS") & alert('test')</script>`;
+    const escaped = escapeHtml(raw);
+
+    assert.ok(!escaped.includes("<"));
+    assert.ok(!escaped.includes(">"));
+    assert.ok(!escaped.includes('"'));
+    assert.ok(!escaped.includes("'"));
+    assert.ok(escaped.includes("&lt;script&gt;"));
+    assert.ok(escaped.includes("&quot;XSS&quot;"));
+    assert.ok(escaped.includes("&amp;"));
+    assert.ok(escaped.includes("&#39;test&#39;"));
+    assert.ok(escaped.includes("&lt;/script&gt;"));
+  });
+
+  // 17. renderCustomerConfirmationEmail escapa valores dinámicos en HTML sin alterar el texto plano
+  it("Auditoría XSS 17: renderCustomerConfirmationEmail escapa HTML pero preserva texto plano", () => {
+    const maliciousCustomerPayload: CustomerBookingPayload = {
+      ...sampleCustomerData,
+      customerName: `Lucas <img src=x onerror=alert("name")>`,
+      serviceName: `Corte & Barba "VIP" <Edición 'Especial'>`,
+    };
+
+    const rendered = renderCustomerConfirmationEmail({
+      payload: maliciousCustomerPayload,
+      baseUrl: "https://rovebarberia.com",
+    });
+
+    // En HTML los valores deben estar completamente escapados
+    assert.ok(!rendered.html.includes("<img src=x onerror="));
+    assert.ok(rendered.html.includes("&lt;img src=x onerror=alert(&quot;name&quot;)&gt;"));
+    assert.ok(rendered.html.includes("Corte &amp; Barba &quot;VIP&quot; &lt;Edición &#39;Especial&#39;&gt;"));
+
+    // En texto plano deben permanecer intactos los caracteres originales para legibilidad
+    assert.ok(rendered.text.includes(`Hola Lucas <img src=x onerror=alert("name")>,`));
+    assert.ok(rendered.text.includes(`- Servicio: Corte & Barba "VIP" <Edición 'Especial'>`));
+    // La URL de cancelación debe conservarse válida
+    assert.ok(rendered.text.includes("/cancelar/0123456789abcdef"));
+    assert.ok(rendered.html.includes("/cancelar/0123456789abcdef"));
+  });
+
+  // 18. renderBarberNotificationEmail escapa valores dinámicos en HTML
+  it("Auditoría XSS 18: renderBarberNotificationEmail escapa datos de cliente y servicio en HTML", () => {
+    const maliciousBarberPayload: BarberBookingPayload = {
+      customerName: `<b onmouseover="alert('xss')">Lucas</b>`,
+      customerEmail: `test+<1>@example.com`,
+      recipientEmail: "barbero@rovebarberia.com",
+      customerPhone: "+542235551234",
+      serviceName: `Corte & Lavado "Express"`,
+      serviceDurationMinutes: 30,
+      servicePriceAmount: 12000,
+      currency: "ARS",
+      startAt: "2026-10-24T15:00:00.000Z",
+      endAt: "2026-10-24T15:30:00.000Z",
+    };
+
+    const rendered = renderBarberNotificationEmail({
+      payload: maliciousBarberPayload,
+    });
+
+    // En HTML
+    assert.ok(!rendered.html.includes("<b onmouseover="));
+    assert.ok(rendered.html.includes("&lt;b onmouseover=&quot;alert(&#39;xss&#39;)&quot;&gt;Lucas&lt;/b&gt;"));
+    assert.ok(rendered.html.includes("test+&lt;1&gt;@example.com"));
+    assert.ok(rendered.html.includes("Corte &amp; Lavado &quot;Express&quot;"));
+
+    // En texto plano
+    assert.ok(rendered.text.includes(`<b onmouseover="alert('xss')">Lucas</b>`));
+    assert.ok(rendered.text.includes(`test+<1>@example.com`));
+    assert.ok(rendered.text.includes(`Corte & Lavado "Express"`));
+  });
+
+  // =========================================================================
   // Pruebas Funcionales y Casos Límite Complementarios
   // =========================================================================
 
-  // 16. Outbox vacía
-  it("16. outbox vacía finaliza sin errores y con métricas en cero", async () => {
+  // 19. Outbox vacía
+  it("19. outbox vacía finaliza sin errores y con métricas en cero", async () => {
     const { mockDb } = createMockOutboxDb([]);
     const { mockClient } = createMockResendClient({});
 
@@ -681,8 +815,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(summary.details.length, 0);
   });
 
-  // 17. Formato de fecha en Buenos Aires
-  it("17. formatea la fecha y hora correctamente en la zona 'America/Argentina/Buenos_Aires'", () => {
+  // 20. Formato de fecha en Buenos Aires
+  it("20. formatea la fecha y hora correctamente en la zona 'America/Argentina/Buenos_Aires'", () => {
     const formatted = formatDateTimeBuenosAires("2026-10-24T15:00:00.000Z");
     assert.equal(formatted.timeStr, "12:00 hs");
     assert.ok(formatted.dateStr.includes("2026"));
@@ -690,8 +824,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(formatted.fullStr.includes("12:00 hs"));
   });
 
-  // 18. Descifrado correcto de payload AES-256-GCM
-  it("18. descifra correctamente el payload cifrado con AES-256-GCM en memoria", () => {
+  // 21. Descifrado correcto de payload AES-256-GCM
+  it("21. descifra correctamente el payload cifrado con AES-256-GCM en memoria", () => {
     const encrypted = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const decrypted = parseAndDecryptOutboxPayload(encrypted);
 
@@ -700,8 +834,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal((decrypted as CustomerBookingPayload).cancellationToken, sampleCustomerData.cancellationToken);
   });
 
-  // 19. Rechazo de payload alterado criptográficamente
-  it("19. rechaza y marca como fallido terminal un payload ilegible o con alteración criptográfica", async () => {
+  // 22. Rechazo de payload alterado criptográficamente
+  it("22. rechaza y marca como fallido terminal un payload ilegible o con alteración criptográfica", async () => {
     const corruptedPayload = {
       iv: "123456789012345678901234",
       tag: "12345678901234567890123456789012",
@@ -738,8 +872,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(loggedError.includes("Descifrado fallido"));
   });
 
-  // 20. Reprogramación ante error recuperable (429 Rate Limit)
-  it("20. reprograma el trabajo con backoff ante error recuperable (429 Rate Limit)", async () => {
+  // 23. Reprogramación ante error recuperable (429 Rate Limit)
+  it("23. reprograma el trabajo con backoff ante error recuperable (429 Rate Limit)", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-rate-limit",
@@ -775,8 +909,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(updatedAttemptCount, 1);
   });
 
-  // 21. Error permanente del proveedor (422)
-  it("21. marca 'failed' de forma inmediata ante un error permanente del proveedor (422 Unprocessable)", async () => {
+  // 24. Error permanente del proveedor (422)
+  it("24. marca 'failed' de forma inmediata ante un error permanente del proveedor (422 Unprocessable)", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-invalid-email",
@@ -810,8 +944,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(isPermanentError({ statusCode: 500, message: "internal_server_error" }), false);
   });
 
-  // 22. Límite máximo de reintentos
-  it("22. transiciona a 'failed' cuando se alcanza el límite máximo de reintentos", async () => {
+  // 25. Límite máximo de reintentos
+  it("25. transiciona a 'failed' cuando se alcanza el límite máximo de reintentos", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-max-attempts",
@@ -847,8 +981,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(updatedAttemptCount, 5);
   });
 
-  // 23. Manejo de excepciones en actualización de base de datos post-envío
-  it("23. maneja excepciones si la base de datos falla al actualizar el estado post-envío", async () => {
+  // 26. Manejo de excepciones en actualización de base de datos post-envío
+  it("26. maneja excepciones si la base de datos falla al actualizar el estado post-envío", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-db-failure",
@@ -881,8 +1015,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(summary.sent, 0, "No debe contabilizar éxito si la actualización de BD falló");
   });
 
-  // 24. No sanitiza ni purga el payload si el envío no fue confirmado exitosamente
-  it("24. no sanitiza ni purga el payload si el envío no fue confirmado exitosamente", async () => {
+  // 27. No sanitiza ni purga el payload si el envío no fue confirmado exitosamente
+  it("27. no sanitiza ni purga el payload si el envío no fue confirmado exitosamente", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-retry-payload",
@@ -910,8 +1044,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(updatedPayload, "not_touched");
   });
 
-  // 25. Notificación al barbero sin token de cancelación
-  it("25. envía la notificación del barbero con datos del cliente pero sin enlace de cancelación", async () => {
+  // 28. Notificación al barbero sin token de cancelación
+  it("28. envía la notificación del barbero con datos del cliente pero sin enlace de cancelación", async () => {
     const barberData: BarberBookingPayload = {
       customerName: "Lucas Silva",
       customerEmail: "lucas@example.com",
@@ -950,8 +1084,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(sentEmails[0].payload.html.includes("+542235551234"));
   });
 
-  // 26. Ausencia de RESEND_API_KEY reprograma sin lanzar excepción
-  it("26. maneja la ausencia de RESEND_API_KEY reprogramando las filas sin abortar con excepción", async () => {
+  // 29. Ausencia de RESEND_API_KEY reprograma sin lanzar excepción
+  it("29. maneja la ausencia de RESEND_API_KEY reprogramando las filas sin abortar con excepción", async () => {
     const originalKey = process.env.RESEND_API_KEY;
     delete process.env.RESEND_API_KEY;
 
@@ -987,8 +1121,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     }
   });
 
-  // 27. Escala de esperas progresivas (backoff)
-  it("27. calculateBackoffMinutes implementa una escala de espera acotada y predecible", () => {
+  // 30. Escala de esperas progresivas (backoff)
+  it("30. calculateBackoffMinutes implementa una escala de espera acotada y predecible", () => {
     assert.equal(calculateBackoffMinutes(1), 1);
     assert.equal(calculateBackoffMinutes(2), 5);
     assert.equal(calculateBackoffMinutes(3), 15);
@@ -997,8 +1131,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.equal(calculateBackoffMinutes(10), 120);
   });
 
-  // 28. Conservación de recipient durante reintentos
-  it("28. conserva el valor de recipient intacto durante reintentos para no perder el destino", async () => {
+  // 31. Conservación de recipient durante reintentos
+  it("31. conserva el valor de recipient intacto durante reintentos para no perder el destino", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-recipient-retried",

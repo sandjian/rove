@@ -8,6 +8,13 @@
       "when": 1792775393215,
       "tag": "0000_clear_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792861200000,
+      "tag": "0001_outbox_lease_token_recipient_privacy",
+      "breakpoints": true
     }
   ]
 }
