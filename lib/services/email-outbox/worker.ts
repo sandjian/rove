@@ -160,8 +160,8 @@ export async function claimPendingOutboxRows(
       .from(emailOutbox)
       .where(
         or(
-          and(eq(emailOutbox.status, "pending"), lte(emailOutbox.nextAttemptAt, sql`NOW()`)),
-          and(eq(emailOutbox.status, "processing"), lte(emailOutbox.nextAttemptAt, sql`NOW()`))
+          and(eq(emailOutbox.status, "pending"), lte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)),
+          and(eq(emailOutbox.status, "processing"), lte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`))
         )
       )
       .orderBy(asc(emailOutbox.nextAttemptAt))
@@ -182,7 +182,7 @@ export async function claimPendingOutboxRows(
         .set({
           status: "processing",
           leaseToken,
-          nextAttemptAt: sql`NOW() + (${lockTimeoutMinutes} || ' minutes')::interval`,
+          nextAttemptAt: sql`clock_timestamp() + (${lockTimeoutMinutes} || ' minutes')::interval`,
         })
         .where(eq(emailOutbox.id, row.id));
 
@@ -253,7 +253,7 @@ export async function processPendingEmails(
           .update(emailOutbox)
           .set({
             status: "pending",
-            nextAttemptAt: sql`NOW() + INTERVAL '1 minute'`,
+            nextAttemptAt: sql`clock_timestamp() + INTERVAL '1 minute'`,
             lastError: errMessage,
             leaseToken: null,
           })
@@ -262,7 +262,7 @@ export async function processPendingEmails(
               eq(emailOutbox.id, row.id),
               eq(emailOutbox.status, "processing"),
               eq(emailOutbox.leaseToken, row.leaseToken),
-              gte(emailOutbox.nextAttemptAt, sql`NOW()`)
+              gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
             )
           )
           .returning({ id: emailOutbox.id });
@@ -303,18 +303,18 @@ export async function processPendingEmails(
 
     try {
       // 3.0 Verificar y renovar el lease para este registro antes del despacho de red.
-      // Exige coincidencia de ID, status 'processing', leaseToken y que el lease siga vigente.
+      // Exige coincidencia de ID, status 'processing', leaseToken y que el lease siga vigente según clock_timestamp().
       const renewed = await client
         .update(emailOutbox)
         .set({
-          nextAttemptAt: sql`NOW() + (${lockTimeoutMinutes} || ' minutes')::interval`,
+          nextAttemptAt: sql`clock_timestamp() + (${lockTimeoutMinutes} || ' minutes')::interval`,
         })
         .where(
           and(
             eq(emailOutbox.id, row.id),
             eq(emailOutbox.status, "processing"),
             eq(emailOutbox.leaseToken, row.leaseToken),
-            gte(emailOutbox.nextAttemptAt, sql`NOW()`)
+            gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
           )
         )
         .returning({ id: emailOutbox.id });
@@ -337,7 +337,7 @@ export async function processPendingEmails(
           parseErr instanceof Error ? parseErr.message : "Error al descifrar payload"
         );
 
-        // Fallo no recuperable: marcar terminal 'failed' verificando leaseToken y vigencia del lease
+        // Fallo no recuperable: marcar terminal 'failed' verificando leaseToken y vigencia real del lease
         const failResult = await client
           .update(emailOutbox)
           .set({
@@ -351,7 +351,7 @@ export async function processPendingEmails(
               eq(emailOutbox.id, row.id),
               eq(emailOutbox.status, "processing"),
               eq(emailOutbox.leaseToken, row.leaseToken),
-              gte(emailOutbox.nextAttemptAt, sql`NOW()`)
+              gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
             )
           )
           .returning({ id: emailOutbox.id });
@@ -446,7 +446,7 @@ export async function processPendingEmails(
         .update(emailOutbox)
         .set({
           status: "sent",
-          sentAt: sql`NOW()`,
+          sentAt: sql`clock_timestamp()`,
           providerMessageId,
           lastError: null,
           recipient: "[REDACTED]",
@@ -458,7 +458,7 @@ export async function processPendingEmails(
             eq(emailOutbox.id, row.id),
             eq(emailOutbox.status, "processing"),
             eq(emailOutbox.leaseToken, row.leaseToken),
-            gte(emailOutbox.nextAttemptAt, sql`NOW()`)
+            gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
           )
         )
         .returning({ id: emailOutbox.id });
@@ -492,7 +492,7 @@ export async function processPendingEmails(
               eq(emailOutbox.id, row.id),
               eq(emailOutbox.status, "processing"),
               eq(emailOutbox.leaseToken, row.leaseToken),
-              gte(emailOutbox.nextAttemptAt, sql`NOW()`)
+              gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
             )
           )
           .returning({ id: emailOutbox.id });
@@ -515,7 +515,7 @@ export async function processPendingEmails(
           .set({
             status: "pending",
             attemptCount: newAttemptCount,
-            nextAttemptAt: sql`NOW() + (${backoffMinutes} || ' minutes')::interval`,
+            nextAttemptAt: sql`clock_timestamp() + (${backoffMinutes} || ' minutes')::interval`,
             lastError: errorMsg,
             leaseToken: null,
           })
@@ -524,7 +524,7 @@ export async function processPendingEmails(
               eq(emailOutbox.id, row.id),
               eq(emailOutbox.status, "processing"),
               eq(emailOutbox.leaseToken, row.leaseToken),
-              gte(emailOutbox.nextAttemptAt, sql`NOW()`)
+              gte(emailOutbox.nextAttemptAt, sql`clock_timestamp()`)
             )
           )
           .returning({ id: emailOutbox.id });

@@ -133,6 +133,8 @@ function createMockOutboxDb(
   let locked = options.isLocked ?? false;
   const capturedClaimTokens: string[] = [];
   const recordedUpdateOps: RecordedUpdateOp[] = [];
+  const capturedClaimSelectOps: Array<{ sql: string; params: unknown[] }> = [];
+  const capturedClaimUpdateOps: Array<{ updates: Record<string, unknown>; sql: string; params: unknown[] }> = [];
   const dialect = new PgDialect();
 
   const mockDb = {
@@ -140,34 +142,48 @@ function createMockOutboxDb(
       const mockTx = {
         select: () => ({
           from: () => ({
-            where: () => ({
-              orderBy: () => ({
-                limit: (limit: number) => ({
-                  for: (_lockType: string, lockOptions?: { skipLocked?: boolean }) => {
-                    const now = new Date();
-                    if (lockOptions?.skipLocked && locked) {
-                      return Promise.resolve([]);
-                    }
-                    const eligible = rows.filter((r) => {
-                      const isTime = r.nextAttemptAt.getTime() <= now.getTime();
-                      return (r.status === "pending" || r.status === "processing") && isTime;
-                    });
-                    if (lockOptions?.skipLocked) {
-                      locked = true;
-                    }
-                    return Promise.resolve(eligible.slice(0, limit));
-                  },
+            where: (whereClause?: unknown) => {
+              if (whereClause) {
+                const query = dialect.sqlToQuery(whereClause as SQL);
+                capturedClaimSelectOps.push({ sql: query.sql, params: query.params });
+              }
+              return {
+                orderBy: () => ({
+                  limit: (limit: number) => ({
+                    for: (_lockType: string, lockOptions?: { skipLocked?: boolean }) => {
+                      const now = new Date();
+                      if (lockOptions?.skipLocked && locked) {
+                        return Promise.resolve([]);
+                      }
+                      const eligible = rows.filter((r) => {
+                        const isTime = r.nextAttemptAt.getTime() <= now.getTime();
+                        return (r.status === "pending" || r.status === "processing") && isTime;
+                      });
+                      if (lockOptions?.skipLocked) {
+                        locked = true;
+                      }
+                      return Promise.resolve(eligible.slice(0, limit));
+                    },
+                  }),
                 }),
-              }),
-            }),
+              };
+            },
           }),
         }),
         update: () => ({
           set: (updates: Record<string, unknown>) => ({
-            where: () => {
+            where: (whereClause?: unknown) => {
               if (updates.leaseToken) {
                 capturedClaimTokens.push(updates.leaseToken as string);
               }
+              let whereSql = "";
+              let whereParams: unknown[] = [];
+              if (whereClause) {
+                const query = dialect.sqlToQuery(whereClause as SQL);
+                whereSql = query.sql;
+                whereParams = query.params;
+              }
+              capturedClaimUpdateOps.push({ updates, sql: whereSql, params: whereParams });
               return createMockUpdateBuilder();
             },
           }),
@@ -239,7 +255,14 @@ function createMockOutboxDb(
     }),
   };
 
-  return { mockDb: mockDb as unknown as DrizzleDb, rows, capturedClaimTokens, recordedUpdateOps };
+  return {
+    mockDb: mockDb as unknown as DrizzleDb,
+    rows,
+    capturedClaimTokens,
+    recordedUpdateOps,
+    capturedClaimSelectOps,
+    capturedClaimUpdateOps,
+  };
 }
 
 describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
@@ -315,7 +338,7 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
   });
 
   // 3. Worker que pierde el lease antes de renovar y verificación de condiciones SQL de renovación
-  it("Auditoría 3: renovación condiciona explícitamente id, status, lease_token y next_attempt_at >= NOW()", async () => {
+  it("Auditoría 3: renovación condiciona explícitamente id, status, lease_token y next_attempt_at >= clock_timestamp()", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-lost-renew",
@@ -346,8 +369,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(renewalOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status");
     assert.ok(renewalOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
     assert.ok(
-      renewalOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
-      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+      renewalOp.sql.includes('"email_outbox"."next_attempt_at" >= clock_timestamp()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= clock_timestamp())"
     );
     assert.ok(
       renewalOp.params.includes(capturedClaimTokens[0]),
@@ -448,8 +471,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(sentOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
     assert.ok(sentOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
     assert.ok(
-      sentOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
-      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+      sentOp.sql.includes('"email_outbox"."next_attempt_at" >= clock_timestamp()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= clock_timestamp())"
     );
     assert.ok(sentOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
     assert.ok(sentOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
@@ -491,8 +514,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(retryOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
     assert.ok(retryOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
     assert.ok(
-      retryOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
-      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+      retryOp.sql.includes('"email_outbox"."next_attempt_at" >= clock_timestamp()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= clock_timestamp())"
     );
     assert.ok(retryOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
     assert.ok(retryOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
@@ -1200,8 +1223,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
   // Sección 9 — Pruebas de Auditoría de Leases Temporales (Fase 5A)
   // =========================================================================
 
-  // 32. El marcado de fallo definitivo ('failed') condiciona estrictamente id, status, lease_token y next_attempt_at >= NOW()
-  it("Auditoría 32: marcado de fallo definitivo condiciona id, status, lease_token y next_attempt_at >= NOW() y no incrementa failed si afecta 0 filas", async () => {
+  // 32. El marcado de fallo definitivo ('failed') condiciona estrictamente id, status, lease_token y next_attempt_at >= clock_timestamp()
+  it("Auditoría 32: marcado de fallo definitivo condiciona id, status, lease_token y next_attempt_at >= clock_timestamp() y no incrementa failed si afecta 0 filas", async () => {
     const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
     const sampleItem = createSampleOutboxItem({
       id: "outbox-fail-lease",
@@ -1239,16 +1262,16 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(failOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
     assert.ok(failOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
     assert.ok(
-      failOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
-      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+      failOp.sql.includes('"email_outbox"."next_attempt_at" >= clock_timestamp()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= clock_timestamp())"
     );
     assert.ok(failOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
     assert.ok(failOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
     assert.equal(failOp.updates.leaseToken, null, "Debe invalidar leaseToken al finalizar");
   });
 
-  // 33. Ausencia de RESEND_API_KEY exige lease vigente (next_attempt_at >= NOW()) y maneja 0 filas
-  it("Auditoría 33: ausencia de RESEND_API_KEY exige id, status, lease_token y next_attempt_at >= NOW() y no incrementa retried si afecta 0 filas", async () => {
+  // 33. Ausencia de RESEND_API_KEY exige lease vigente (next_attempt_at >= clock_timestamp()) y maneja 0 filas
+  it("Auditoría 33: ausencia de RESEND_API_KEY exige id, status, lease_token y next_attempt_at >= clock_timestamp() y no incrementa retried si afecta 0 filas", async () => {
     const originalKey = process.env.RESEND_API_KEY;
     delete process.env.RESEND_API_KEY;
 
@@ -1283,8 +1306,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
       assert.ok(noKeyOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
       assert.ok(noKeyOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
       assert.ok(
-        noKeyOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
-        "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+        noKeyOp.sql.includes('"email_outbox"."next_attempt_at" >= clock_timestamp()'),
+        "Debe exigir que el lease siga vigente (next_attempt_at >= clock_timestamp())"
       );
       assert.ok(noKeyOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
       assert.ok(noKeyOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
@@ -1293,8 +1316,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     }
   });
 
-  // 34. Payload corrupto / fallo de descifrado exige lease vigente (next_attempt_at >= NOW()) y maneja 0 filas
-  it("Auditoría 34: payload corrupto exige id, status, lease_token y next_attempt_at >= NOW() y no incrementa failed si afecta 0 filas", async () => {
+  // 34. Payload corrupto / fallo de descifrado exige lease vigente (next_attempt_at >= clock_timestamp()) y maneja 0 filas
+  it("Auditoría 34: payload corrupto exige id, status, lease_token y next_attempt_at >= clock_timestamp() y no incrementa failed si afecta 0 filas", async () => {
     const corruptedPayload = {
       iv: "123456789012345678901234",
       tag: "12345678901234567890123456789012",
@@ -1333,8 +1356,8 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
     assert.ok(payloadErrOp.sql.includes('"email_outbox"."status" = $'), "Debe condicionar por status 'processing'");
     assert.ok(payloadErrOp.sql.includes('"email_outbox"."lease_token" = $'), "Debe condicionar por lease_token");
     assert.ok(
-      payloadErrOp.sql.includes('"email_outbox"."next_attempt_at" >= NOW()'),
-      "Debe exigir que el lease siga vigente (next_attempt_at >= NOW())"
+      payloadErrOp.sql.includes('"email_outbox"."next_attempt_at" >= clock_timestamp()'),
+      "Debe exigir que el lease siga vigente (next_attempt_at >= clock_timestamp())"
     );
     assert.ok(payloadErrOp.params.includes(capturedClaimTokens[0]), "Debe incluir el lease_token en los parámetros");
     assert.ok(payloadErrOp.params.includes("processing"), "Debe condicionar que el estado sea 'processing'");
@@ -1434,5 +1457,135 @@ describe("Worker de Notificaciones de Email Outbox (Fase 5A)", () => {
       resendClient: clientFail,
     });
     assert.equal(summaryFail.failed, 0, "failed debe permanecer 0 si afectó 0 filas");
+  });
+
+  // 37. Asignación inicial de lease en claimPendingOutboxRows y selección de candidatos utilizan clock_timestamp()
+  it("Auditoría 37: claimPendingOutboxRows selecciona candidatos y asigna lease utilizando clock_timestamp() e intervalos parametrizados", async () => {
+    const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-claim-precision",
+      appointmentId: "appt-claim-precision",
+      payload: encryptedPayload,
+    });
+
+    const { mockDb, capturedClaimSelectOps, capturedClaimUpdateOps } = createMockOutboxDb([sampleItem]);
+    const { mockClient } = createMockResendClient({});
+
+    await processPendingEmails({
+      client: mockDb,
+      resendClient: mockClient,
+      lockTimeoutMinutes: 7,
+    });
+
+    const dialect = new PgDialect();
+
+    // Verificación de la consulta SELECT FOR UPDATE SKIP LOCKED
+    assert.ok(capturedClaimSelectOps.length > 0, "Debe registrar la consulta SELECT de candidatos");
+    const selectSql = capturedClaimSelectOps[0].sql;
+    assert.ok(
+      selectSql.includes('"email_outbox"."next_attempt_at" <= clock_timestamp()'),
+      "La selección de candidatos pendientes o abandonados debe evaluar contra clock_timestamp()"
+    );
+
+    // Verificación del UPDATE de asignación inicial del lease
+    assert.ok(capturedClaimUpdateOps.length > 0, "Debe registrar el UPDATE de asignación del lease");
+    const claimOp = capturedClaimUpdateOps[0];
+    const nextAttemptAtQuery = dialect.sqlToQuery(claimOp.updates.nextAttemptAt as SQL);
+    assert.ok(
+      nextAttemptAtQuery.sql.includes("clock_timestamp() + ($1 || ' minutes')::interval"),
+      "La asignación del lease debe calcular el vencimiento a partir de clock_timestamp()"
+    );
+    assert.ok(
+      nextAttemptAtQuery.params.includes(7),
+      "Debe vincular correctamente el parámetro lockTimeoutMinutes (7 minutos)"
+    );
+  });
+
+  // 38. Renovación previa al envío calcula el vencimiento utilizando clock_timestamp() y parámetro acotado
+  it("Auditoría 38: renovación previa al envío calcula next_attempt_at con clock_timestamp() y parámetro vinculado", async () => {
+    const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
+    const sampleItem = createSampleOutboxItem({
+      id: "outbox-renew-precision",
+      appointmentId: "appt-renew-precision",
+      payload: encryptedPayload,
+    });
+
+    const { mockDb, recordedUpdateOps } = createMockOutboxDb([sampleItem]);
+    const { mockClient } = createMockResendClient({});
+
+    await processPendingEmails({
+      client: mockDb,
+      resendClient: mockClient,
+      lockTimeoutMinutes: 10,
+    });
+
+    const dialect = new PgDialect();
+    const renewalOp = recordedUpdateOps.find((op) => op.isRenewal);
+    assert.ok(renewalOp, "Debe haber registrado la operación de renovación");
+
+    const renewalNextAttemptQuery = dialect.sqlToQuery(renewalOp.updates.nextAttemptAt as SQL);
+    assert.ok(
+      renewalNextAttemptQuery.sql.includes("clock_timestamp() + ($1 || ' minutes')::interval"),
+      "La renovación del lease debe calcular el nuevo vencimiento a partir de clock_timestamp()"
+    );
+    assert.ok(
+      renewalNextAttemptQuery.params.includes(10),
+      "Debe vincular el parámetro lockTimeoutMinutes de forma acotada (10 minutos)"
+    );
+  });
+
+  // 39. Reintento con backoff y finalización exitosa (sent) utilizan clock_timestamp() en asignaciones
+  it("Auditoría 39: reintento con backoff y persistencia sent_at utilizan clock_timestamp() en sus asignaciones SET", async () => {
+    const encryptedPayload = encryptOutboxPayload(JSON.stringify(sampleCustomerData));
+    const dialect = new PgDialect();
+
+    // 1. Caso sent_at en finalización exitosa
+    const itemSent = createSampleOutboxItem({
+      id: "outbox-sent-clock",
+      appointmentId: "appt-sent-clock",
+      payload: encryptedPayload,
+    });
+    const { mockDb: dbSent, recordedUpdateOps: opsSent } = createMockOutboxDb([itemSent]);
+    const { mockClient: clientSent } = createMockResendClient({});
+    await processPendingEmails({
+      client: dbSent,
+      resendClient: clientSent,
+    });
+
+    const sentOp = opsSent.find((op) => op.isFinalize && op.updates.status === "sent");
+    assert.ok(sentOp, "Debe registrar operación sent");
+    const sentAtQuery = dialect.sqlToQuery(sentOp.updates.sentAt as SQL);
+    assert.ok(
+      sentAtQuery.sql.includes("clock_timestamp()"),
+      "sent_at debe registrar la hora de reloj real del despacho mediante clock_timestamp()"
+    );
+
+    // 2. Caso backoff en reintento
+    const itemRetry = createSampleOutboxItem({
+      id: "outbox-retry-clock",
+      appointmentId: "appt-retry-clock",
+      payload: encryptedPayload,
+      attemptCount: 1, // segundo intento -> backoff de 5 minutos
+    });
+    const { mockDb: dbRetry, recordedUpdateOps: opsRetry } = createMockOutboxDb([itemRetry]);
+    const { mockClient: clientRetry } = createMockResendClient({
+      throwError: new Error("503 Service Unavailable"),
+    });
+    await processPendingEmails({
+      client: dbRetry,
+      resendClient: clientRetry,
+    });
+
+    const retryOp = opsRetry.find((op) => op.isFinalize && op.updates.status === "pending");
+    assert.ok(retryOp, "Debe registrar operación de reintento");
+    const retryNextAttemptQuery = dialect.sqlToQuery(retryOp.updates.nextAttemptAt as SQL);
+    assert.ok(
+      retryNextAttemptQuery.sql.includes("clock_timestamp() + ($1 || ' minutes')::interval"),
+      "El cálculo del próximo intento debe partir del clock_timestamp() real del fallo"
+    );
+    assert.ok(
+      retryNextAttemptQuery.params.includes(5),
+      "Debe vincular los minutos de backoff correspondientes (5 minutos para intento 2)"
+    );
   });
 });
