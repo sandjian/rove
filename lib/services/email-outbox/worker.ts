@@ -1,13 +1,15 @@
-import { eq, and, or, lte, gte, asc, inArray, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { eq, and, or, lte, gte, asc, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { db, type DrizzleDb } from "../../db";
-import { emailOutbox, type EmailOutboxItem } from "../../db/schema";
+import { emailOutbox } from "../../db/schema";
 import { decryptOutboxPayload } from "../../security";
 import type { EncryptedPayload } from "../../security/types";
 import type {
   ProcessPendingEmailsOptions,
   ProcessPendingEmailsSummary,
   ProcessedEmailDetail,
+  ClaimedOutboxItem,
   ResendClientInterface,
   SendEmailResult,
   CustomerBookingPayload,
@@ -37,7 +39,7 @@ export function calculateBackoffMinutes(attemptCount: number): number {
 }
 
 /**
- * Sanitiza los mensajes de error para no exponer tokens, claves ni URLs con credenciales en logs o en la base de datos.
+ * Sanitiza los mensajes de error para no exponer tokens, claves, emails ni URLs con credenciales en logs o en la base de datos.
  */
 export function sanitizeErrorMessage(rawMessage: string): string {
   if (!rawMessage || typeof rawMessage !== "string") {
@@ -47,6 +49,7 @@ export function sanitizeErrorMessage(rawMessage: string): string {
   return rawMessage
     .replace(/re_[a-zA-Z0-9_]+/g, "[REDACTED_API_KEY]")
     .replace(/[0-9a-fA-F]{64}/g, "[REDACTED_TOKEN]")
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[REDACTED_EMAIL]")
     .replace(/postgres(ql)?:\/\/[^\s]+/gi, "[REDACTED_DB_URL]")
     .slice(0, 500);
 }
@@ -149,7 +152,7 @@ export async function claimPendingOutboxRows(
   client: DrizzleDb,
   batchSize: number,
   lockTimeoutMinutes: number
-): Promise<EmailOutboxItem[]> {
+): Promise<ClaimedOutboxItem[]> {
   return await client.transaction(async (tx) => {
     // 1. Seleccionar filas candidatas (pendientes vencidas o procesamientos abandonados)
     const candidates = await tx
@@ -169,18 +172,28 @@ export async function claimPendingOutboxRows(
       return [];
     }
 
-    const candidateIds = candidates.map((row) => row.id);
+    const claimedItems: ClaimedOutboxItem[] = [];
 
-    // 2. Marcar como 'processing' y extender nextAttemptAt como lease temporal contra caídas
-    await tx
-      .update(emailOutbox)
-      .set({
+    // 2. Marcar como 'processing' y asignar a cada fila un lease_token criptográfico único e irrepetible
+    for (const row of candidates) {
+      const leaseToken = randomUUID();
+      await tx
+        .update(emailOutbox)
+        .set({
+          status: "processing",
+          leaseToken,
+          nextAttemptAt: sql`NOW() + (${lockTimeoutMinutes} || ' minutes')::interval`,
+        })
+        .where(eq(emailOutbox.id, row.id));
+
+      claimedItems.push({
+        ...row,
         status: "processing",
-        nextAttemptAt: sql`NOW() + (${lockTimeoutMinutes} || ' minutes')::interval`,
-      })
-      .where(inArray(emailOutbox.id, candidateIds));
+        leaseToken,
+      });
+    }
 
-    return candidates;
+    return claimedItems;
   });
 }
 
@@ -188,11 +201,12 @@ export async function claimPendingOutboxRows(
  * Procesa las notificaciones pendientes de email_outbox y las despacha vía Resend.
  *
  * Garantías:
+ * - Propiedad del lease: token criptográfico único por intento con verificación atómica.
  * - Concurrencia segura: FOR UPDATE SKIP LOCKED impide reclamos duplicados.
  * - Desacoplamiento de red: las llamadas a Resend se realizan fuera de la transacción de BD.
- * - Idempotencia: envía el UUID de outbox como Idempotency-Key a Resend.
- * - Seguridad en reposo: descifra los datos sensibles únicamente en memoria.
- * - Sanitización post-envío: purga el payload confidencial tras la confirmación de entrega.
+ * - Idempotencia: envía el UUID inmutable de outbox como Idempotency-Key a Resend.
+ * - Cifrado en reposo: descifra los datos sensibles y el destinatario en memoria.
+ * - Sanitización post-envío: purga el payload confidencial y el destinatario tras el éxito.
  *
  * @param options - Opciones de configuración y dependencias inyectables.
  * @returns Resumen estructurado sin información sensible.
@@ -241,14 +255,21 @@ export async function processPendingEmails(
             status: "pending",
             nextAttemptAt: sql`NOW() + INTERVAL '1 minute'`,
             lastError: errMessage,
+            leaseToken: null,
           })
-          .where(and(eq(emailOutbox.id, row.id), eq(emailOutbox.status, "processing")));
+          .where(
+            and(
+              eq(emailOutbox.id, row.id),
+              eq(emailOutbox.status, "processing"),
+              eq(emailOutbox.leaseToken, row.leaseToken)
+            )
+          );
 
         summary.retried++;
         summary.details.push({
           id: row.id,
           eventType: row.eventType,
-          recipient: row.recipient,
+          recipient: "[PROTECTED]",
           status: "retried",
           error: errMessage,
         });
@@ -264,15 +285,14 @@ export async function processPendingEmails(
     const detail: ProcessedEmailDetail = {
       id: row.id,
       eventType: row.eventType,
-      recipient: row.recipient,
+      recipient: "[PROTECTED]",
       status: "failed",
     };
 
     try {
       // 3.0 Verificar y renovar el lease para este registro antes del despacho de red.
-      // Si el lease expiró mientras se procesaban filas previas del lote y otro worker lo tomó,
-      // evitamos enviar un correo concurrente redundante.
-      await client
+      // Exige coincidencia de ID, status 'processing', leaseToken y que el lease siga vigente.
+      const renewed = await client
         .update(emailOutbox)
         .set({
           nextAttemptAt: sql`NOW() + (${lockTimeoutMinutes} || ' minutes')::interval`,
@@ -281,9 +301,20 @@ export async function processPendingEmails(
           and(
             eq(emailOutbox.id, row.id),
             eq(emailOutbox.status, "processing"),
+            eq(emailOutbox.leaseToken, row.leaseToken),
             gte(emailOutbox.nextAttemptAt, sql`NOW()`)
           )
-        );
+        )
+        .returning({ id: emailOutbox.id });
+
+      // Si afectó cero filas, el worker perdió la propiedad del lease: detener procesamiento de inmediato
+      if (!renewed || renewed.length === 0) {
+        summary.retried++;
+        detail.status = "retried";
+        detail.error = "Propiedad de lease perdida antes del despacho; procesamiento detenido.";
+        summary.details.push(detail);
+        continue;
+      }
 
       // 3.1 Descifrar payload en memoria
       let payloadData: CustomerBookingPayload | BarberBookingPayload;
@@ -294,21 +325,31 @@ export async function processPendingEmails(
           parseErr instanceof Error ? parseErr.message : "Error al descifrar payload"
         );
 
-        // Fallo no recuperable: marcar terminal 'failed'
-        await client
+        // Fallo no recuperable: marcar terminal 'failed' verificando leaseToken
+        const failResult = await client
           .update(emailOutbox)
           .set({
             status: "failed",
             attemptCount: row.attemptCount + 1,
             lastError: errorMsg,
+            leaseToken: null,
           })
-          .where(and(eq(emailOutbox.id, row.id), eq(emailOutbox.status, "processing")));
+          .where(
+            and(
+              eq(emailOutbox.id, row.id),
+              eq(emailOutbox.status, "processing"),
+              eq(emailOutbox.leaseToken, row.leaseToken)
+            )
+          )
+          .returning({ id: emailOutbox.id });
 
-        summary.failed++;
-        detail.status = "failed";
-        detail.error = errorMsg;
-        detail.terminal = true;
-        summary.details.push(detail);
+        if (failResult && failResult.length > 0) {
+          summary.failed++;
+          detail.status = "failed";
+          detail.error = errorMsg;
+          detail.terminal = true;
+          summary.details.push(detail);
+        }
         continue;
       }
 
@@ -335,16 +376,17 @@ export async function processPendingEmails(
         throw new Error(`Tipo de evento no soportado para envío: '${row.eventType}'.`);
       }
 
-      // Resolver destinatario según el tipo de notificación
-      const targetRecipient = isCustomerNotification
-        ? ("recipientEmail" in payloadData && (payloadData as Record<string, unknown>).recipientEmail
-            ? String((payloadData as Record<string, unknown>).recipientEmail)
-            : "customerEmail" in payloadData && payloadData.customerEmail
-            ? String(payloadData.customerEmail)
-            : row.recipient)
-        : ("recipientEmail" in payloadData && (payloadData as Record<string, unknown>).recipientEmail
-            ? String((payloadData as Record<string, unknown>).recipientEmail)
-            : row.recipient);
+      // Resolver destinatario prioritariamente desde el payload descifrado en memoria
+      let targetRecipient: string;
+      if ("recipientEmail" in payloadData && payloadData.recipientEmail) {
+        targetRecipient = String(payloadData.recipientEmail);
+      } else if (isCustomerNotification && payloadData.customerEmail) {
+        targetRecipient = String(payloadData.customerEmail);
+      } else if (row.recipient && row.recipient !== "[ENCRYPTED_IN_PAYLOAD]" && row.recipient !== "[REDACTED]") {
+        targetRecipient = row.recipient;
+      } else {
+        throw new Error("No se pudo determinar el destinatario del correo desde el payload descifrado.");
+      }
 
       // 3.3 Enviar a través de Resend con clave de idempotencia y timeout de red acotado.
       // La clave de idempotencia es SIEMPRE el UUID inmutable de la fila (row.id) en todos los reintentos.
@@ -382,8 +424,8 @@ export async function processPendingEmails(
         throw new Error("Resend no devolvió un identificador de mensaje válido.");
       }
 
-      // 3.5 Éxito confirmado: actualizar outbox con verificación de estado y sanitizar payload y recipient
-      await client
+      // 3.5 Éxito confirmado: actualizar outbox con verificación de leaseToken, invalidar propiedad y sanitizar
+      const updateResult = await client
         .update(emailOutbox)
         .set({
           status: "sent",
@@ -392,17 +434,24 @@ export async function processPendingEmails(
           lastError: null,
           recipient: "[REDACTED]",
           payload: { sanitized: true, sentAt: new Date().toISOString() },
+          leaseToken: null,
         })
         .where(
           and(
             eq(emailOutbox.id, row.id),
-            eq(emailOutbox.status, "processing")
+            eq(emailOutbox.status, "processing"),
+            eq(emailOutbox.leaseToken, row.leaseToken)
           )
-        );
+        )
+        .returning({ id: emailOutbox.id });
 
-      summary.sent++;
-      detail.status = "sent";
-      detail.providerMessageId = providerMessageId;
+      if (!updateResult || updateResult.length === 0) {
+        detail.error = "Envío aceptado por Resend pero se perdió la propiedad del lease antes de persistir sent.";
+      } else {
+        summary.sent++;
+        detail.status = "sent";
+        detail.providerMessageId = providerMessageId;
+      }
     } catch (sendError) {
       const errorMsg = sanitizeErrorMessage(
         sendError instanceof Error ? sendError.message : String(sendError)
@@ -412,46 +461,56 @@ export async function processPendingEmails(
 
       if (isPermanent || newAttemptCount >= maxAttempts) {
         // Estado terminal: 'failed'
-        await client
+        const updateResult = await client
           .update(emailOutbox)
           .set({
             status: "failed",
             attemptCount: newAttemptCount,
             lastError: errorMsg,
+            leaseToken: null,
           })
           .where(
             and(
               eq(emailOutbox.id, row.id),
-              eq(emailOutbox.status, "processing")
+              eq(emailOutbox.status, "processing"),
+              eq(emailOutbox.leaseToken, row.leaseToken)
             )
-          );
+          )
+          .returning({ id: emailOutbox.id });
 
-        summary.failed++;
-        detail.status = "failed";
-        detail.error = errorMsg;
-        detail.terminal = true;
+        if (updateResult && updateResult.length > 0) {
+          summary.failed++;
+          detail.status = "failed";
+          detail.error = errorMsg;
+          detail.terminal = true;
+        }
       } else {
         // Estado transitorio: reprogramar con espera progresiva
         // NOTA: El payload y recipient NO se sanitizan aquí para permitir el reintento futuro.
         const backoffMinutes = calculateBackoffMinutes(newAttemptCount);
-        await client
+        const updateResult = await client
           .update(emailOutbox)
           .set({
             status: "pending",
             attemptCount: newAttemptCount,
             nextAttemptAt: sql`NOW() + (${backoffMinutes} || ' minutes')::interval`,
             lastError: errorMsg,
+            leaseToken: null,
           })
           .where(
             and(
               eq(emailOutbox.id, row.id),
-              eq(emailOutbox.status, "processing")
+              eq(emailOutbox.status, "processing"),
+              eq(emailOutbox.leaseToken, row.leaseToken)
             )
-          );
+          )
+          .returning({ id: emailOutbox.id });
 
-        summary.retried++;
-        detail.status = "retried";
-        detail.error = errorMsg;
+        if (updateResult && updateResult.length > 0) {
+          summary.retried++;
+          detail.status = "retried";
+          detail.error = errorMsg;
+        }
       }
     }
 

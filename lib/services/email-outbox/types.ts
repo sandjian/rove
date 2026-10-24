@@ -1,4 +1,5 @@
 import type { DrizzleDb } from "../../db";
+import type { EmailOutboxItem } from "../../db/schema";
 
 /**
  * Datos requeridos para la notificación de confirmación al cliente.
@@ -14,6 +15,7 @@ export interface CustomerBookingPayload {
   startAt: string; // ISO 8601
   endAt: string; // ISO 8601
   cancellationToken: string; // Token en claro recuperado tras descifrado en memoria
+  recipientEmail?: string; // Destinatario explícito cifrado en reposo
 }
 
 /**
@@ -29,6 +31,14 @@ export interface BarberBookingPayload {
   currency: string;
   startAt: string; // ISO 8601
   endAt: string; // ISO 8601
+  recipientEmail?: string; // Destinatario explícito cifrado en reposo
+}
+
+/**
+ * Fila de outbox reclamada con propiedad de lease activa y token criptográfico garantizado.
+ */
+export interface ClaimedOutboxItem extends EmailOutboxItem {
+  leaseToken: string;
 }
 
 /**

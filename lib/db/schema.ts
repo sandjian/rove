@@ -149,13 +149,14 @@ export const emailOutbox = pgTable(
       .notNull()
       .references(() => appointments.id, { onDelete: "cascade" }),
     eventType: varchar("event_type", { length: 50 }).notNull(), // 'booking_confirmed' | 'customer_cancellation' | 'admin_cancellation'
-    recipient: varchar("recipient", { length: 255 }).notNull(),
+    recipient: varchar("recipient", { length: 255 }), // Nullable para soportar destinatarios cifrados exclusivamente en payload
     payload: jsonb("payload").notNull(),
     status: varchar("status", { length: 20 }).default("pending").notNull(), // 'pending' | 'processing' | 'sent' | 'failed'
     attemptCount: integer("attempt_count").default(0).notNull(),
     nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    leaseToken: varchar("lease_token", { length: 64 }), // Token criptográfico único por reclamación de lease
     providerMessageId: varchar("provider_message_id", { length: 255 }),
     lastError: text("last_error"),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -173,6 +174,7 @@ export const emailOutbox = pgTable(
       sql`${table.status} IN ('pending', 'processing', 'sent', 'failed')`
     ),
     index("idx_email_outbox_dispatch").on(table.status, table.nextAttemptAt),
+    index("idx_email_outbox_lease").on(table.id, table.leaseToken),
     index("idx_email_outbox_appointment").on(table.appointmentId),
   ]
 );

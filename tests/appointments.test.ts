@@ -677,9 +677,17 @@ describe("Servicio de Creación Transaccional de Reservas (Fase 4)", () => {
       );
 
       assert.equal(insertedOutbox.length, 2);
-      const recipients = insertedOutbox.map((o) => o.recipient);
-      assert.ok(recipients.includes("lucas@example.com"));
-      assert.ok(recipients.includes("barbero@rovebarberia.com"));
+      // El campo recipient en reposo está protegido con marcador [ENCRYPTED_IN_PAYLOAD]
+      for (const item of insertedOutbox) {
+        assert.equal(item.recipient, "[ENCRYPTED_IN_PAYLOAD]");
+      }
+      // Los destinatarios reales se obtienen descifrando el payload a nivel de aplicación
+      const decryptedRecipients = insertedOutbox.map((o) => {
+        const decryptedJson = JSON.parse(decryptOutboxPayload(o.payload as { iv: string; tag: string; ciphertext: string }));
+        return decryptedJson.recipientEmail;
+      });
+      assert.ok(decryptedRecipients.includes("lucas@example.com"));
+      assert.ok(decryptedRecipients.includes("barbero@rovebarberia.com"));
     } finally {
       process.env.BARBER_NOTIFICATION_EMAIL = originalBarber;
     }

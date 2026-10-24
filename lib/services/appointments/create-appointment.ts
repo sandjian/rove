@@ -267,7 +267,7 @@ export async function createAppointment(
         })
         .returning();
 
-      // 8.2 Preparar notificaciones con cifrado integral del payload (Zero-Knowledge en reposo)
+      // 8.2 Preparar notificaciones con cifrado de datos en reposo a nivel de aplicación
       const customerNotificationData = {
         customerName,
         customerEmail,
@@ -279,6 +279,7 @@ export async function createAppointment(
         startAt: startAt.toISOString(),
         endAt: endAt.toISOString(),
         cancellationToken: rawToken,
+        recipientEmail: customerEmail,
       };
       const encryptedCustomerPayload = encryptOutboxPayload(
         JSON.stringify(customerNotificationData)
@@ -294,7 +295,7 @@ export async function createAppointment(
         {
           appointmentId: newAppointment.id,
           eventType: "booking_confirmed",
-          recipient: customerEmail,
+          recipient: "[ENCRYPTED_IN_PAYLOAD]",
           payload: encryptedCustomerPayload,
           status: "pending",
         },
@@ -313,6 +314,7 @@ export async function createAppointment(
           currency: "ARS",
           startAt: startAt.toISOString(),
           endAt: endAt.toISOString(),
+          recipientEmail: barberEmail,
         };
         const encryptedBarberPayload = encryptOutboxPayload(
           JSON.stringify(barberNotificationData)
@@ -321,7 +323,7 @@ export async function createAppointment(
         outboxEntries.push({
           appointmentId: newAppointment.id,
           eventType: "booking_confirmed",
-          recipient: barberEmail,
+          recipient: "[ENCRYPTED_IN_PAYLOAD]",
           payload: encryptedBarberPayload,
           status: "pending",
         });
