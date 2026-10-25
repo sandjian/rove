@@ -353,8 +353,7 @@ export default function HomePage() {
               </div>
 
               {/* Client Component de Turnos */}
-              <div className="rounded-2xl bg-white/60 border border-white/80 p-4 sm:p-6 shadow-inner">
-                {/* TODO: Insertar Client Component de Turnos */}
+              <div className="w-full">
                 <BookingFlow />
               </div>
             </div>
