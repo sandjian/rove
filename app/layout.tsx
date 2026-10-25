@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Krona_One, Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, Krona_One, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-body",
-  subsets: ["latin"],
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
@@ -54,9 +49,9 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${spaceGrotesk.variable} ${plusJakarta.variable} ${geistMono.variable} ${kronaOne.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${kronaOne.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-200 selection:text-zinc-950">
+      <body className="min-h-full flex flex-col font-sans selection:bg-blue-100 selection:text-slate-900">
         {children}
       </body>
     </html>

@@ -13,545 +13,453 @@ import {
   ChevronRight,
   Phone,
   Mail,
+  Compass,
+  Zap,
+  Star,
+  ExternalLink,
+  MessageCircle,
+  QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { BookingFlow } from "@/app/components/booking-flow";
 import { MotionFade, MotionStaggerContainer, MotionStaggerItem } from "@/app/components/motion-fade";
-import { TiltedGridHero } from "@/app/components/tilted-grid-hero";
 
 export default function HomePage() {
   const stats = [
-    { value: "8+", label: "Años de Oficio", icon: Award },
-    { value: "15k+", label: "Cortes Realizados", icon: Scissors },
-    { value: "99%", label: "Clientes Satisfechos", icon: Users },
-    { value: "100%", label: "Precisión y Estilo", icon: Sparkles },
-  ];
-
-  const heroGallery = [
     {
-      src: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80",
-      alt: "Corte clásico Rove",
+      value: "5+",
+      label: "Años de Oficio",
+      sublabel: "Trayectoria en Buenos Aires",
+      icon: Award,
     },
     {
-      src: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80",
-      alt: "Ritual de toalla caliente y navaja",
+      value: "40+",
+      label: "Servicios Semanales",
+      sublabel: "Atención personalizada",
+      icon: Scissors,
     },
     {
-      src: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80",
-      alt: "Herramientas de barbería de autor",
+      value: "25+",
+      label: "Técnicas de Autor",
+      sublabel: "Corte clásico & moderno",
+      icon: Sparkles,
     },
     {
-      src: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=1000&q=80",
-      alt: "Perfilado milimétrico de barba",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=1000&q=80",
-      alt: "Detalle de degradado y fade",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1000&q=80",
-      alt: "Ambiente exclusivo salón Rove",
+      value: "18",
+      label: "Distinciones",
+      sublabel: "Premios y certificaciones",
+      icon: Star,
     },
   ];
 
-  const servicesBento = [
-    {
-      id: "corte-clasico",
-      title: "Corte Clásico & Fade",
-      subtitle: "ESPECIALIDAD ROVE",
-      category: "CABELLO",
-      description:
-        "Corte a tijera o máquina con degradé artesanal a milímetro. Lavado premium, acabado a navaja japonesa y peinado con ceras de fijación mate.",
-      duration: "35 min",
-      price: "$12.000",
-      featured: true,
-      tag: "Más solicitado",
-    },
-    {
-      id: "perfilado-barba",
-      title: "Perfilado & Ritual de Barba",
-      subtitle: "TRATAMIENTO COMPLETO",
-      category: "BARBERÍA",
-      description:
-        "Toalla caliente aromatizada con aceites esenciales, rebajado simétrico, navaja templada y bálsamo nutritivo calmante.",
-      duration: "30 min",
-      price: "$8.000",
-      featured: false,
-      tag: "Ritual Tradicional",
-    },
-    {
-      id: "combo-rove",
-      title: "Experiencia Total Rove",
-      subtitle: "CORTE + BARBA + SPA",
-      category: "EXPERIENCIA EXCLUSIVA",
-      description:
-        "El servicio insignia: corte integral, esculpido de barba con toalla térmica, exfoliación facial suave y refrigerio de cortesía.",
-      duration: "55 min",
-      price: "$18.000",
-      featured: false,
-      tag: "Completo",
-    },
-  ];
-
-  const capabilities = [
-    {
-      title: "Asesoramiento de Visagismo",
-      desc: "Evaluamos la fisonomía de tu rostro y tipo de cabello para recomendarte el corte que mejor proyecta tu imagen.",
-    },
-    {
-      title: "Higiene y Esterilización Grado Hospitalario",
-      desc: "Herramientas desinfectadas con rayos UV y autoclaves entre cliente y cliente. Hojas de navaja 100% descartables.",
-    },
-    {
-      title: "Productos de Gama Alta",
-      desc: "Fórmulas importadas sin parabenos: pomadas con fijación natural, aceites de jojoba y champús botánicos.",
-    },
-    {
-      title: "Puntualidad Absoluta sin Esperas",
-      desc: "Respetamos el horario de tu turno al segundo. Tu tiempo es sagrado, sin demoras de salón tradicional.",
-    },
-    {
-      title: "Espacio Íntimo y Exclusivo",
-      desc: "Ambiente reservado, acústica cuidada, café espresso de especialidad o bebidas frías seleccionadas.",
-    },
-    {
-      title: "Confirmación y Gestión Digital",
-      desc: "Notificaciones automáticas a tu casilla con enlace para cancelar o reprogramar sin necesidad de llamar por teléfono.",
-    },
-  ];
-
-  const processSteps = [
+  const services = [
     {
       number: "01",
-      title: "RESERVA",
-      desc: "Elegís tu horario ideal y servicio en nuestro turnero online en menos de 1 minuto.",
+      title: "Corte Clásico & Fade",
+      description: "Corte a tijera o máquina con degradé artesanal milimétrico, lavado profundo y peinado con cera mate.",
+      image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
+      tags: ["Corte Clásico", "Tijera", "Navaja"],
     },
     {
       number: "02",
-      title: "CONSULTA",
-      desc: "Charlamos sobre el estilo que buscás, textura de cabello y mantenimiento deseado.",
+      title: "Perfilado & Ritual Barba",
+      description: "Toalla caliente aromatizada, rebajado simétrico a navaja japonesa y tratamiento de aceites esenciales.",
+      image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=800&q=80",
+      tags: ["Barbería", "Toalla Térmica", "Ritual"],
     },
     {
       number: "03",
-      title: "CORTE & RITUAL",
-      desc: "Técnica precisa de barbería clásica, toalla caliente y productos de autor.",
-    },
-    {
-      number: "04",
-      title: "DETALLE FINAL",
-      desc: "Perfilado a navaja, limpieza de cuello y peinado profesional duradero.",
-    },
-    {
-      number: "05",
-      title: "RESULTADO",
-      desc: "Salís con un estilo impecable, seguridad total y frescura renovada.",
+      title: "Experiencia Total Rove",
+      description: "El servicio insignia: corte integral, esculpido de barba, exfoliación facial calmante y bebida de cortesía.",
+      image: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80",
+      tags: ["Combo Premium", "Spa Facial", "Corte + Barba"],
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-zinc-100 selection:bg-zinc-200 selection:text-zinc-950 font-sans antialiased overflow-x-hidden">
-      {/* Glow de fondo superior sutil */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[450px] bg-gradient-to-b from-zinc-800/15 via-transparent to-transparent blur-[140px] pointer-events-none -z-10" />
-
-      {/* NAVBAR */}
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-800/60 bg-[#0a0a0c]/85 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          {/* Logo Monograma / Identidad */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-['Krona_One',sans-serif] text-xl sm:text-2xl tracking-[0.2em] font-extrabold text-zinc-100 group-hover:text-zinc-300 transition-colors uppercase">
-              ROVE
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 group-hover:bg-zinc-100 transition-colors" />
-          </Link>
-
-          {/* Menú de Navegación */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-widest uppercase text-zinc-400">
-            <a href="#servicios" className="hover:text-zinc-100 transition-colors">
-              Servicios
-            </a>
-            <a href="#filosofia" className="hover:text-zinc-100 transition-colors">
-              Filosofía
-            </a>
-            <a href="#proceso" className="hover:text-zinc-100 transition-colors">
-              Experiencia
-            </a>
-            <a href="#ubicacion" className="hover:text-zinc-100 transition-colors">
-              Ubicación
-            </a>
-          </nav>
-
-          {/* CTA Header */}
-          <div className="flex items-center gap-3">
-            <Button
-              render={
-                <a
-                  href="#reservar"
-                  className="rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-semibold text-xs tracking-wider uppercase px-5 py-2.5 h-auto transition-transform active:scale-95 shadow-sm"
-                >
-                  Reservar Turno ↗
-                </a>
-              }
-            />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#ebf3fc] via-[#f4f7fb] to-[#e6eef8] text-slate-800 font-sans antialiased relative overflow-x-hidden selection:bg-blue-200 selection:text-slate-900">
+      {/* Fondo de esferas y reflejos luminosos (Glass ambient lighting) */}
+      <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-200/50 via-sky-100/30 to-transparent blur-[120px] pointer-events-none -z-10" />
+      <div className="fixed bottom-[-10%] left-[-5%] w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-cyan-200/40 via-sky-100/40 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed top-[40%] left-[20%] w-[500px] h-[500px] rounded-full bg-gradient-to-r from-white/70 to-blue-50/40 blur-[100px] pointer-events-none -z-10" />
 
       {/* CONTENEDOR PRINCIPAL */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-24 sm:space-y-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-12">
         {/* ========================================================================= */}
-        {/* HERO SECTION LIBRE CON TILTED 3D GRID VISIBLE Y TEXTOS CENTRADOS */}
+        {/* 1. HERO SECTION & NAVBAR REPLICADA EN CONTENEDOR GLASSMORFISMO */}
         {/* ========================================================================= */}
-        <section className="relative w-full -mt-6 sm:-mt-10">
-          <TiltedGridHero
-            images={heroGallery}
-            speed={4.5}
-            tileHeight={24}
-            aspectRatio={16 / 9}
-            gap={6}
-            axis={78}
-            curve={70}
-            fade={15}
-            className="w-full min-h-[580px] sm:min-h-[640px] flex items-center justify-center py-12"
-          >
-            {/* Textos centrados flotando limpios sin caja */}
-            <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 px-4">
-              <MotionFade delay={0.1}>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-zinc-800 bg-zinc-950/80 backdrop-blur-md text-[11px] font-medium tracking-[0.25em] text-zinc-400 uppercase shadow-lg">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  Barbería de Autor &bull; Buenos Aires
-                </div>
-              </MotionFade>
+        <section className="relative rounded-[2rem] sm:rounded-[2.5rem] bg-white/45 backdrop-blur-2xl border border-white/70 shadow-[0_12px_40px_0_rgba(31,38,135,0.06)] p-6 sm:p-10 lg:p-12 overflow-hidden">
+          {/* Brillo especular superior */}
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
 
-              <MotionFade delay={0.2}>
-                <h1 className="font-['Krona_One',sans-serif] text-4xl sm:text-6xl md:text-7xl font-normal tracking-[0.08em] uppercase text-zinc-100 leading-[1.08] drop-shadow-xl">
+          {/* BARRA DE NAVEGACIÓN SUPERIOR */}
+          <header className="flex items-center justify-between pb-8 sm:pb-12 border-b border-white/50">
+            {/* Logo a la izquierda */}
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 via-sky-400 to-cyan-300 flex items-center justify-center text-white shadow-sm shadow-blue-400/30 font-bold text-xs">
+                R
+              </div>
+              <span className="font-['Krona_One',sans-serif] text-sm sm:text-base font-normal tracking-[0.2em] text-slate-900 uppercase">
+                ROVE GLASS
+              </span>
+            </Link>
+
+            {/* Badge píldora central ("Turnos Disponibles") */}
+            <div className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] text-[11px] font-medium tracking-wider text-slate-600 uppercase">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Turnos Disponibles Hoy
+            </div>
+
+            {/* Enlaces a la derecha */}
+            <nav className="flex items-center gap-6 sm:gap-8 text-xs font-semibold uppercase tracking-wider text-slate-600">
+              <a href="#servicios" className="hover:text-slate-900 transition-colors">
+                Servicios
+              </a>
+              <a href="#reservar" className="hover:text-slate-900 transition-colors hidden md:inline-block">
+                Reservas
+              </a>
+              <a href="#contacto" className="hover:text-slate-900 transition-colors">
+                Contacto
+              </a>
+            </nav>
+          </header>
+
+          {/* CONTENIDO DEL HERO */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center pt-10 sm:pt-14 pb-4">
+            {/* LADO IZQUIERDO: TÍTULO GIGANTE CRISTALINO, SUBTÍTULO Y BOTONES */}
+            <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+              <MotionFade delay={0.1}>
+                {/* Título estilo 3D cromo/cristal de NOVA GLASS */}
+                <h1 className="font-['Krona_One',sans-serif] text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-[0.04em] uppercase leading-[0.95] select-none text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-700 to-slate-400 drop-shadow-[0_4px_12px_rgba(255,255,255,0.9)]">
                   ROVE <br />
-                  <span className="text-zinc-500 tracking-[0.14em]">BARBER</span>
+                  <span className="tracking-[0.08em] bg-clip-text text-transparent bg-gradient-to-r from-slate-800 via-sky-950 to-slate-600">
+                    BARBER
+                  </span>
                 </h1>
               </MotionFade>
 
+              <MotionFade delay={0.2}>
+                <div className="text-base sm:text-lg font-semibold tracking-wide text-slate-800 uppercase font-sans">
+                  Barbería de Autor &amp; Arquitectura del Estilo
+                </div>
+              </MotionFade>
+
               <MotionFade delay={0.3}>
-                <p className="text-sm sm:text-base md:text-lg text-zinc-400 max-w-xl mx-auto font-light leading-relaxed drop-shadow">
-                  Cortes clásicos, degradados modernos y perfilado tradicional de barba. 
-                  Una experiencia reservada donde la precisión artesanal se fusiona con la tecnología.
+                <p className="text-sm sm:text-base text-slate-600 max-w-lg font-normal leading-relaxed">
+                  Diseñamos cortes clásicos y degradados modernos que fusionan técnica de precisión, pulcritud artesanal
+                  y una atmósfera de calma y confort reservado en Buenos Aires.
                 </p>
               </MotionFade>
 
               <MotionFade delay={0.4}>
-                <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  {/* Botón primario degradé celeste/azul como en la referencia */}
                   <Button
                     size="lg"
                     render={
                       <a
                         href="#reservar"
-                        className="rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-medium text-xs tracking-wider uppercase px-7 py-5 h-auto transition-all shadow-md flex items-center"
+                        className="rounded-2xl bg-gradient-to-r from-blue-500 via-sky-400 to-blue-400 hover:opacity-95 text-white font-semibold text-xs tracking-wider uppercase px-7 py-5 h-auto transition-transform active:scale-95 shadow-[0_10px_25px_-5px_rgba(59,130,246,0.35)] flex items-center gap-2 border border-white/40"
                       >
-                        Reservar Turno <ArrowUpRight className="w-4 h-4 ml-1.5" />
+                        Reservar Turno ↓
                       </a>
                     }
                   />
 
+                  {/* Botón secundario contorno translúcido */}
                   <Button
                     variant="outline"
                     size="lg"
                     render={
                       <a
                         href="#servicios"
-                        className="rounded-full border-zinc-800 hover:border-zinc-700 bg-zinc-950/80 hover:bg-zinc-900 text-zinc-300 hover:text-zinc-100 font-normal text-xs tracking-wider uppercase px-6 py-5 h-auto backdrop-blur-md transition-all flex items-center"
+                        className="rounded-2xl border-white/80 bg-white/60 hover:bg-white text-slate-700 hover:text-slate-900 font-semibold text-xs tracking-wider uppercase px-6 py-5 h-auto backdrop-blur-md transition-all shadow-sm flex items-center gap-1.5"
                       >
-                        Ver Servicios
+                        Ver Servicios <ArrowUpRight className="w-3.5 h-3.5" />
                       </a>
                     }
                   />
                 </div>
               </MotionFade>
             </div>
-          </TiltedGridHero>
+
+            {/* LADO DERECHO: IMAGEN DEL BARBERO CON ELEMENTO CIRCULAR FLOTANTE */}
+            <div className="lg:col-span-5 relative flex justify-center">
+              <MotionFade delay={0.3} direction="left">
+                <div className="relative w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[2rem] overflow-hidden p-2.5 bg-white/40 border border-white/80 shadow-[0_20px_50px_rgba(31,38,135,0.08)] backdrop-blur-xl">
+                  {/* Contenedor de la foto */}
+                  <div className="relative w-full h-full rounded-[1.6rem] overflow-hidden bg-slate-100">
+                    <img
+                      src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80"
+                      alt="Barbero Rove"
+                      className="w-full h-full object-cover object-center filter contrast-[1.05] brightness-[1.02]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent pointer-events-none" />
+                  </div>
+
+                  {/* Sello circular flotante giratorio en la esquina inferior derecha */}
+                  <div className="absolute -bottom-2 -right-2 sm:bottom-4 sm:right-4 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white/80 border border-white shadow-xl backdrop-blur-2xl flex items-center justify-center p-2 group cursor-pointer">
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      {/* Texto circular giratorio simulado */}
+                      <svg className="w-full h-full animate-[spin_12s_linear_infinite]" viewBox="0 0 100 100">
+                        <path
+                          id="circlePath"
+                          d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+                          fill="none"
+                        />
+                        <text className="text-[8.5px] uppercase font-bold tracking-[0.24em] fill-slate-600">
+                          <textPath href="#circlePath">
+                            &bull; ROVE BARBERIA &bull; EST. 2026
+                          </textPath>
+                        </text>
+                      </svg>
+                      {/* Ícono central brillante */}
+                      <div className="absolute inset-0 flex items-center justify-center text-blue-500">
+                        <Sparkles className="w-6 h-6 animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </MotionFade>
+            </div>
+          </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* ESTADÍSTICAS (Barra de datos rápidos estilo referencia) */}
+        {/* 2. STATS (CINTA DE ESTADÍSTICAS EXACTA A LA IMAGEN) */}
         {/* ========================================================================= */}
         <section className="relative">
           <MotionFade delay={0.2}>
-            <div className="rounded-3xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md p-8 sm:p-10 shadow-xl">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-zinc-800/80">
-                {stats.map((stat, idx) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div
-                      key={idx}
-                      className={`flex flex-col items-center text-center ${
-                        idx !== 0 ? "pt-6 md:pt-0 md:px-6" : "md:pr-6"
-                      }`}
-                    >
-                      <Icon className="w-5 h-5 text-zinc-400 mb-3" />
-                      <div className="font-['Krona_One',sans-serif] text-3xl sm:text-4xl font-extrabold text-zinc-100 tracking-tight">
-                        {stat.value}
+            <div className="rounded-[2rem] sm:rounded-[2.2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.06)] p-8 sm:p-10">
+              <div className="grid grid-cols-2 md:grid-cols-12 gap-8 md:gap-6 items-center">
+                {/* 4 columnas de estadísticas con iconos de trazo fino */}
+                <div className="col-span-2 md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-6 divide-x-0 sm:divide-x divide-slate-200/60">
+                  {stats.map((item, idx) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={idx} className={idx !== 0 ? "sm:pl-6" : ""}>
+                        <div className="w-7 h-7 rounded-lg bg-blue-50/80 border border-blue-100/60 flex items-center justify-center text-blue-500 mb-3">
+                          <Icon className="w-4 h-4 stroke-[1.6]" />
+                        </div>
+                        <div className="font-['Krona_One',sans-serif] text-2xl sm:text-3xl font-normal text-slate-900 tracking-tight">
+                          {item.value}
+                        </div>
+                        <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
+                          {item.label}
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-normal mt-0.5">
+                          {item.sublabel}
+                        </div>
                       </div>
-                      <div className="text-xs uppercase tracking-widest text-zinc-400 mt-2 font-medium">
-                        {stat.label}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+
+                {/* Bloque de cita textual estilo Steve Jobs a la derecha */}
+                <div className="col-span-2 md:col-span-4 border-t md:border-t-0 md:border-l border-slate-200/70 pt-6 md:pt-0 md:pl-8 space-y-2">
+                  <p className="text-xs sm:text-[13px] text-slate-600 font-normal italic leading-relaxed">
+                    &ldquo;El estilo no es solo cómo se ve y cómo se siente. El corte perfecto es cómo funciona con tu ritmo de vida.&rdquo;
+                  </p>
+                  <div className="text-[11px] font-semibold text-slate-800 uppercase tracking-wider">
+                    — Filosofía Rove
+                  </div>
+                </div>
               </div>
             </div>
           </MotionFade>
         </section>
 
         {/* ========================================================================= */}
-        {/* BENTO GRID DE SERVICIOS ("Featured Work" de la imagen) */}
+        {/* 3. SERVICIOS DESTACADOS (FEATURED CASE STUDIES EN 3 COLUMNAS) */}
         {/* ========================================================================= */}
-        <section id="servicios" className="space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800/80 pb-6">
-            <div>
-              <div className="text-xs uppercase tracking-[0.25em] text-zinc-500 font-semibold mb-2">
-                Catálogo de Autor
-              </div>
-              <h2 className="font-['Krona_One',sans-serif] text-2xl sm:text-3xl font-extrabold uppercase text-zinc-100 tracking-tight">
-                Servicios Seleccionados
-              </h2>
+        <section id="servicios" className="space-y-6">
+          {/* Header de sección */}
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Servicios Destacados
             </div>
-            <a
-              href="#reservar"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-zinc-100 transition-colors"
-            >
-              Ver disponibilidad de turnos <ChevronRight className="w-3.5 h-3.5" />
-            </a>
+            <div className="hidden sm:flex items-center gap-2 text-slate-400 text-xs">
+              <span className="cursor-pointer hover:text-slate-800">&larr;</span>
+              <span className="cursor-pointer hover:text-slate-800">&rarr;</span>
+            </div>
           </div>
 
-          <MotionStaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {servicesBento.map((srv) => (
-              <MotionStaggerItem key={srv.id} className="h-full">
-                <Card className="h-full rounded-2xl border-zinc-800/80 bg-zinc-900/50 hover:bg-zinc-900/80 hover:border-zinc-700/80 transition-all duration-300 flex flex-col justify-between group overflow-hidden">
-                  <CardContent className="p-7 flex flex-col justify-between h-full space-y-6">
-                    {/* Header de la tarjeta */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
-                          {srv.category}
-                        </span>
-                        <Badge
-                          variant="outline"
-                          className="border-zinc-800 bg-zinc-950 text-zinc-400 text-[10px] tracking-wider uppercase font-medium"
-                        >
-                          {srv.duration}
-                        </Badge>
-                      </div>
-
-                      <div className="space-y-1">
-                        <h3 className="font-['Krona_One',sans-serif] text-lg font-bold text-zinc-100 group-hover:text-zinc-200 transition-colors">
-                          {srv.title}
-                        </h3>
-                        <p className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">
-                          {srv.subtitle}
-                        </p>
-                      </div>
-
-                      <p className="text-xs text-zinc-400 font-light leading-relaxed">
-                        {srv.description}
-                      </p>
+          <MotionStaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {services.map((srv, idx) => (
+              <MotionStaggerItem key={idx}>
+                <div className="group rounded-[2rem] bg-white/45 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.06)] hover:shadow-[0_16px_40px_0_rgba(31,38,135,0.1)] p-6 sm:p-7 transition-all duration-300 flex flex-col justify-between space-y-6">
+                  {/* Imagen superior con número indicador */}
+                  <div className="relative aspect-[16/10] rounded-[1.4rem] overflow-hidden bg-slate-100">
+                    <img
+                      src={srv.image}
+                      alt={srv.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-xl bg-black/40 backdrop-blur-md text-white text-[10px] font-bold tracking-widest uppercase">
+                      {srv.number}
                     </div>
+                  </div>
 
-                    {/* Footer de la tarjeta con precio y acción */}
-                    <div className="pt-4 border-t border-zinc-800/60 flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-zinc-400 block">
-                          Valor
-                        </span>
-                        <span className="font-['Krona_One',sans-serif] text-xl font-extrabold text-zinc-100">
-                          {srv.price}
-                        </span>
-                      </div>
+                  {/* Título y descripción */}
+                  <div className="space-y-2">
+                    <h3 className="font-['Krona_One',sans-serif] text-lg font-normal text-slate-900 group-hover:text-blue-600 transition-colors">
+                      {srv.title}
+                    </h3>
+                    <p className="text-xs sm:text-[13px] text-slate-600 font-normal leading-relaxed">
+                      {srv.description}
+                    </p>
+                  </div>
 
-                      <Button
-                        size="icon"
-                        render={
-                          <a
-                            href="#reservar"
-                            title={`Reservar ${srv.title}`}
-                            className="rounded-full bg-zinc-800 hover:bg-zinc-100 text-zinc-300 hover:text-zinc-950 transition-all w-10 h-10 group-hover:scale-105 flex items-center justify-center"
-                          >
-                            <ArrowUpRight className="w-4 h-4" />
-                          </a>
-                        }
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                  {/* Etiquetas estilo píldora inferiores (Pills) */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200/50">
+                    {srv.tags.map((tag, tIdx) => (
+                      <span
+                        key={tIdx}
+                        className="px-3 py-1 rounded-full bg-white/80 border border-white/90 shadow-sm text-[10px] font-medium text-slate-600 uppercase tracking-wider"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </MotionStaggerItem>
             ))}
           </MotionStaggerContainer>
         </section>
 
         {/* ========================================================================= */}
-        {/* FILOSOFÍA Y DETALLES ("Core Capabilities" de la referencia) */}
+        {/* 4. FORMULARIO DE RESERVA / TURNERO (REEMPLAZA SKILLS & TECH STACK) */}
         {/* ========================================================================= */}
-        <section id="filosofia" className="space-y-8">
-          <div className="border-b border-zinc-800/80 pb-6">
-            <div className="text-xs uppercase tracking-[0.25em] text-zinc-400 font-semibold mb-2">
-              Estándares de Excelencia
-            </div>
-            <h2 className="font-['Krona_One',sans-serif] text-2xl sm:text-3xl font-extrabold uppercase text-zinc-100 tracking-tight">
-              Filosofía & Pilares
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {capabilities.map((item, idx) => (
-              <MotionFade key={idx} delay={idx * 0.08}>
-                <div className="p-7 rounded-2xl border border-zinc-800/70 bg-zinc-900/30 hover:border-zinc-700/60 transition-colors space-y-3 h-full">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-800/50 border border-zinc-700/40 flex items-center justify-center text-zinc-300 mb-4">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                  <h3 className="font-['Krona_One',sans-serif] text-sm font-bold text-zinc-200">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-zinc-400 font-light leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
-              </MotionFade>
-            ))}
-          </div>
-        </section>
-
-        {/* ========================================================================= */}
-        {/* PROCESO ("My Design Process" de la referencia) */}
-        {/* ========================================================================= */}
-        <section id="proceso" className="space-y-8">
-          <div className="border-b border-zinc-800/80 pb-6">
-            <div className="text-xs uppercase tracking-[0.25em] text-zinc-400 font-semibold mb-2">
-              Paso a Paso
-            </div>
-            <h2 className="font-['Krona_One',sans-serif] text-2xl sm:text-3xl font-extrabold uppercase text-zinc-100 tracking-tight">
-              La Experiencia Rove
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {processSteps.map((step, idx) => (
-              <MotionFade key={idx} delay={idx * 0.07}>
-                <div className="p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/20 space-y-3 relative overflow-hidden h-full">
-                  <div className="font-['Krona_One',sans-serif] text-2xl font-black text-zinc-700">
-                    {step.number}
-                  </div>
-                  <h3 className="font-['Krona_One',sans-serif] text-xs font-bold uppercase text-zinc-200 tracking-wider">
-                    {step.title}
-                  </h3>
-                  <p className="text-[11px] text-zinc-400 font-light leading-relaxed">
-                    {step.desc}
-                  </p>
-                </div>
-              </MotionFade>
-            ))}
-          </div>
-        </section>
-
-        {/* ========================================================================= */}
-        {/* SECCIÓN TURNERO / CALL TO ACTION (BookingFlow montado limpiamente) */}
-        {/* ========================================================================= */}
-        <section id="reservar" className="scroll-mt-24 space-y-8">
+        <section id="reservar" className="scroll-mt-24 space-y-4">
           <MotionFade delay={0.1}>
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <Badge className="bg-zinc-900 text-zinc-300 border-zinc-800 text-[10px] tracking-widest uppercase py-1 px-3">
-                Sistema Oficial de Citas
-              </Badge>
-              <h2 className="font-['Krona_One',sans-serif] text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-zinc-100">
-                Reservá Tu Horario
-              </h2>
-              <p className="text-xs sm:text-sm text-zinc-400 font-light">
-                Seleccioná el servicio, el día y la hora que mejor te acomode. Sin llamadas ni esperas.
-              </p>
+            <div className="flex items-center gap-2 px-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-sky-400" />
+              Agenda Online en Tiempo Real
             </div>
           </MotionFade>
 
-          {/* Contenedor del Turnero */}
+          {/* Contenedor Bento-Grid inferior para el turnero */}
           <MotionFade delay={0.2}>
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-8 backdrop-blur-xl shadow-2xl">
-              <BookingFlow />
+            <div className="rounded-[2.2rem] sm:rounded-[2.5rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_12px_40px_0_rgba(31,38,135,0.06)] p-6 sm:p-10 lg:p-12">
+              <div className="max-w-3xl mx-auto text-center space-y-3 mb-8">
+                <h2 className="font-['Krona_One',sans-serif] text-2xl sm:text-3xl font-normal text-slate-900 uppercase tracking-tight">
+                  Seleccioná tu Turno
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 font-normal">
+                  Elegí el servicio, el día y el horario disponible. Confirmación inmediata vía correo electrónico.
+                </p>
+              </div>
+
+              {/* Client Component de Turnos */}
+              <div className="rounded-2xl bg-white/60 border border-white/80 p-4 sm:p-6 shadow-inner">
+                {/* TODO: Insertar Client Component de Turnos */}
+                <BookingFlow />
+              </div>
             </div>
           </MotionFade>
         </section>
 
         {/* ========================================================================= */}
-        {/* FOOTER / CONTACTO ("Let's Create..." de la referencia) */}
+        {/* 5. FOOTER (REEMPLAZA "LET'S BUILD SOMETHING EXTRAORDINARY") */}
         {/* ========================================================================= */}
-        <section id="ubicacion" className="pt-8">
+        <footer id="contacto" className="pt-4 pb-8 space-y-8">
           <MotionFade delay={0.2}>
-            <div className="rounded-3xl border border-zinc-800/80 bg-zinc-900/50 backdrop-blur-xl p-8 sm:p-12 overflow-hidden relative">
-              {/* Resplandor decorativo */}
-              <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-zinc-700/10 to-transparent blur-3xl pointer-events-none" />
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                {/* Texto Masivo Izquierda */}
-                <div className="lg:col-span-7 space-y-4">
-                  <h2 className="font-['Krona_One',sans-serif] text-3xl sm:text-5xl font-black uppercase text-zinc-100 leading-[1.1] tracking-tight">
-                    DEFINÍ TU ESTILO. <br />
-                    <span className="text-zinc-500">RESERVÁ HOY.</span>
+            <div className="rounded-[2.2rem] sm:rounded-[2.5rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_12px_40px_0_rgba(31,38,135,0.06)] p-8 sm:p-12 lg:p-14">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                {/* IZQUIERDA: TÍTULO GRANDE Y BOTÓN PRINCIPAL */}
+                <div className="lg:col-span-5 space-y-4">
+                  <h2 className="font-['Krona_One',sans-serif] text-2xl sm:text-4xl font-normal uppercase text-slate-900 leading-[1.1] tracking-tight">
+                    RESERVÁ TU <br />
+                    TURNO HOY
                   </h2>
-                  <p className="text-xs sm:text-sm text-zinc-400 font-light max-w-md">
-                    Atención personalizada, café de cortesía y la precisión que mereces.
+                  <p className="text-xs sm:text-sm text-slate-600 font-normal max-w-sm leading-relaxed">
+                    Viví la experiencia de una barbería de autor con los más altos estándares de higiene y confort.
                   </p>
                   <div className="pt-2">
                     <Button
+                      size="lg"
                       render={
                         <a
                           href="#reservar"
-                          className="rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-bold text-xs uppercase tracking-widest px-7 py-5 h-auto transition-transform active:scale-95 inline-flex items-center"
+                          className="rounded-2xl bg-gradient-to-r from-blue-500 via-sky-400 to-blue-400 text-white font-semibold text-xs uppercase tracking-wider px-7 py-5 h-auto transition-transform active:scale-95 shadow-[0_10px_25px_-5px_rgba(59,130,246,0.35)] inline-flex items-center gap-2 border border-white/40"
                         >
-                          Agendar Cita ↗
+                          Agendar Cita →
                         </a>
                       }
                     />
                   </div>
                 </div>
 
-                {/* Info Contacto Derecha */}
-                <div className="lg:col-span-5 space-y-4 text-xs text-zinc-400 border-t lg:border-t-0 lg:border-l border-zinc-800 pt-6 lg:pt-0 lg:pl-8">
+                {/* CENTRO: DATOS DE CONTACTO (Email, WhatsApp, Ubicación) */}
+                <div className="lg:col-span-4 space-y-4 text-xs text-slate-600 border-t lg:border-t-0 lg:border-l border-slate-200/70 pt-6 lg:pt-0 lg:pl-8">
+                  <div className="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-3">
+                    Contacto Directo
+                  </div>
                   <div className="flex items-center gap-3">
-                    <MapPin className="w-4 h-4 text-zinc-300 shrink-0" />
+                    <div className="w-8 h-8 rounded-xl bg-white border border-white/80 shadow-sm flex items-center justify-center text-blue-500">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <span>contacto@rovebarberia.com</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-white border border-white/80 shadow-sm flex items-center justify-center text-emerald-500">
+                      <MessageCircle className="w-4 h-4" />
+                    </div>
+                    <span>+54 9 11 4892-0091 (WhatsApp)</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-white border border-white/80 shadow-sm flex items-center justify-center text-sky-500">
+                      <MapPin className="w-4 h-4" />
+                    </div>
                     <span>Honduras 4872, Palermo Soho, CABA</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-4 h-4 text-zinc-300 shrink-0" />
-                    <span>Lunes a Sábados — 10:00 a 20:00 hs</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-4 h-4 text-zinc-300 shrink-0" />
-                    <span>+54 9 11 4892-0091</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-4 h-4 text-zinc-300 shrink-0" />
-                    <span>contacto@rovebarberia.com</span>
+                </div>
+
+                {/* DERECHA: BLOQUE CUADRADO EMULANDO EL CÓDIGO QR */}
+                <div className="lg:col-span-3 flex justify-center lg:justify-end">
+                  <div className="w-40 sm:w-44 rounded-2xl bg-white/80 border border-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)] text-center space-y-3">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                      Ubicación &amp; GPS
+                    </div>
+                    {/* Contenedor del código QR estilizado */}
+                    <div className="aspect-square rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center p-3 relative group">
+                      <QrCode className="w-full h-full text-slate-800 stroke-[1.4]" />
+                      <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-blue-600 bg-white px-2 py-0.5 rounded-full shadow-sm">
+                          Abrir Maps
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-slate-500">
+                      Escaneá para llegar
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </MotionFade>
 
-          {/* Copyright y links legales */}
-          <div className="py-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-500 gap-4">
+          {/* Copyright y links inferiores */}
+          <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 px-4 gap-4">
             <div>
               &copy; 2026 ROVE Barbería. Todos los derechos reservados.
             </div>
-
             <div className="flex items-center gap-6">
-              <Link href="/admin/login" className="hover:text-zinc-300 transition-colors">
+              <Link href="/admin/login" className="hover:text-slate-800 transition-colors">
                 Acceso Barbero
               </Link>
-              <a href="#" className="hover:text-zinc-300 transition-colors">
+              <a href="#" className="hover:text-slate-800 transition-colors">
                 Instagram
               </a>
-              <a href="#" className="hover:text-zinc-300 transition-colors">
-                Términos
+              <a href="#" className="hover:text-slate-800 transition-colors">
+                Políticas de Reserva
               </a>
             </div>
           </div>
-        </section>
-      </main>
+        </footer>
+      </div>
     </div>
   );
 }
