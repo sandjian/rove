@@ -154,18 +154,18 @@ export function TiltedGridHero({
   return (
     <div
       ref={ref}
-      className={cn("relative overflow-hidden", className)}
+      className={cn("relative overflow-hidden w-full", className)}
       {...props}
-      style={{ containerType: "size", ...props.style }}
+      style={{ containerType: "inline-size", ...props.style }}
     >
       <style>{css}</style>
 
       {/* Renglón cilíndrico animado */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 transition-opacity duration-700"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-700 overflow-hidden"
         style={{
-          opacity: layout ? 0.85 : 0,
+          opacity: 0.85,
           perspective: `${+(r * CAMERA).toFixed(3)}cqw`,
           perspectiveOrigin: `50% ${axis}%`,
           maskImage: mask,
