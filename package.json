@@ -7,18 +7,26 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import tsx --test tests/security.test.ts tests/availability.test.ts tests/repositories.test.ts tests/appointments.test.ts tests/outbox-worker.test.ts tests/concurrency-integration.test.ts",
+    "test": "node --import tsx --test tests/security.test.ts tests/availability.test.ts tests/repositories.test.ts tests/appointments.test.ts tests/cancel-appointment.test.ts tests/outbox-worker.test.ts tests/concurrency-integration.test.ts",
     "outbox:process": "node --import tsx scripts/process-outbox.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@base-ui/react": "^1.9.0",
     "@neondatabase/serverless": "^1.2.0",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.4.0",
     "drizzle-orm": "^0.45.4",
+    "lucide-react": "^1.61.0",
     "next": "16.4.3",
+    "next-themes": "^0.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "resend": "^6.34.1",
+    "shadcn": "^4.22.1",
+    "sonner": "^2.0.8",
+    "tw-animate-css": "^1.4.0",
     "ws": "^8.22.0"
   },
   "devDependencies": {

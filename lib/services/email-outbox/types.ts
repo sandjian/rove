@@ -42,9 +42,40 @@ export interface ClaimedOutboxItem extends EmailOutboxItem {
 }
 
 /**
+ * Datos requeridos para la notificación de cancelación solicitada por el cliente.
+ */
+export interface CustomerCancellationPayload {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  serviceName: string;
+  startAt: string;
+  endAt: string;
+  recipientEmail?: string;
+}
+
+/**
+ * Datos requeridos para la notificación de cancelación administrativa realizada por el barbero.
+ */
+export interface AdminCancellationPayload {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  serviceName: string;
+  startAt: string;
+  endAt: string;
+  recipientEmail?: string;
+  adminReason?: string;
+}
+
+/**
  * Unión de payloads válidos de notificación de turnos.
  */
-export type BookingOutboxPayload = CustomerBookingPayload | BarberBookingPayload;
+export type BookingOutboxPayload =
+  | CustomerBookingPayload
+  | BarberBookingPayload
+  | CustomerCancellationPayload
+  | AdminCancellationPayload;
 
 /**
  * Interfaz de envío de email para Resend.

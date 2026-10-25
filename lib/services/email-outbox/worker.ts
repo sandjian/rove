@@ -19,6 +19,8 @@ import type {
 import {
   renderCustomerConfirmationEmail,
   renderBarberNotificationEmail,
+  renderCustomerCancellationEmail,
+  renderAdminCancellationEmail,
 } from "./templates";
 
 /**
@@ -428,6 +430,18 @@ export async function processPendingEmails(
             payload: payloadData as BarberBookingPayload,
           });
         }
+      } else if (row.eventType === "customer_cancellation") {
+        isCustomerNotification = true;
+        emailContent = renderCustomerCancellationEmail({
+          payload: payloadData as any,
+          baseUrl,
+        });
+      } else if (row.eventType === "admin_cancellation") {
+        isCustomerNotification = true;
+        emailContent = renderAdminCancellationEmail({
+          payload: payloadData as any,
+          baseUrl,
+        });
       } else {
         throw new Error(`Tipo de evento no soportado para envío: '${row.eventType}'.`);
       }

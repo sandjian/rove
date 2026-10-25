@@ -245,3 +245,165 @@ Precio: ${formattedPrice}
 
   return { subject, html, text };
 }
+
+/**
+ * Genera el email confirmando la cancelación solicitada por el cliente.
+ */
+export function renderCustomerCancellationEmail(options: {
+  payload: {
+    customerName: string;
+    serviceName: string;
+    startAt: string;
+  };
+  baseUrl?: string;
+}): { subject: string; html: string; text: string } {
+  const { payload, baseUrl = "https://rovebarberia.com" } = options;
+  const { fullStr } = formatDateTimeBuenosAires(payload.startAt);
+
+  const subject = `Turno cancelado — ${payload.serviceName} en Rove Barbería`;
+  const text = `Hola ${payload.customerName},
+
+Tu turno para "${payload.serviceName}" del ${fullStr} ha sido cancelado con éxito conforme a tu solicitud.
+
+La franja horaria fue liberada. Cuando desees volver a agendar, podés ingresar en cualquier momento a: ${baseUrl}
+
+Saludos,
+Rove Barbería`;
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(subject)}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #09090b; color: #f4f4f5; margin: 0; padding: 24px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; margin: 0 auto; background-color: #18181b; border-radius: 12px; border: 1px solid #27272a; overflow: hidden;">
+    <tr>
+      <td style="padding: 28px; background-color: #121214; border-bottom: 1px solid #27272a; text-align: center;">
+        <h1 style="color: #fbbf24; font-size: 20px; font-weight: 800; letter-spacing: 0.15em; margin: 0; text-transform: uppercase;">ROVE</h1>
+        <p style="color: #a1a1aa; font-size: 11px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.2em;">Barbería de Autor</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 28px;">
+        <h2 style="color: #f4f4f5; font-size: 18px; margin: 0 0 12px 0;">Cancelación de Turno Confirmada</h2>
+        <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin: 0 0 20px 0;">
+          Hola <strong style="color: #f4f4f5;">${escapeHtml(payload.customerName)}</strong>, tu turno fue cancelado correctamente.
+        </p>
+
+        <table width="100%" border="0" cellspacing="0" cellpadding="10" style="background-color: #27272a; border-radius: 8px; margin-bottom: 24px;">
+          <tr>
+            <td style="color: #a1a1aa; font-size: 13px; width: 35%;">Servicio:</td>
+            <td style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${escapeHtml(payload.serviceName)}</td>
+          </tr>
+          <tr>
+            <td style="color: #a1a1aa; font-size: 13px;">Fecha liberada:</td>
+            <td style="color: #f87171; font-size: 14px; font-weight: 600;">${escapeHtml(fullStr)}</td>
+          </tr>
+        </table>
+
+        <div style="text-align: center; margin: 24px 0 10px 0;">
+          <a href="${escapeHtml(baseUrl)}" style="background-color: #fbbf24; color: #09090b; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 13px; font-weight: 700; display: inline-block;">
+            Reservar un nuevo turno
+          </a>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 16px 28px; background-color: #121214; border-top: 1px solid #27272a; text-align: center;">
+        <p style="color: #71717a; font-size: 11px; margin: 0;">Rove Barbería — Buenos Aires</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject, html, text };
+}
+
+/**
+ * Genera el email cuando el barbero cancela un turno administrativamente.
+ */
+export function renderAdminCancellationEmail(options: {
+  payload: {
+    customerName: string;
+    serviceName: string;
+    startAt: string;
+    adminReason?: string;
+  };
+  baseUrl?: string;
+}): { subject: string; html: string; text: string } {
+  const { payload, baseUrl = "https://rovebarberia.com" } = options;
+  const { fullStr } = formatDateTimeBuenosAires(payload.startAt);
+
+  const subject = `Aviso importante: Turno cancelado por la barbería (${payload.serviceName})`;
+  const reasonText = payload.adminReason ? `Motivo: ${payload.adminReason}\n\n` : "";
+
+  const text = `Hola ${payload.customerName},
+
+Te informamos que tu turno para "${payload.serviceName}" del ${fullStr} tuvo que ser cancelado por causas de fuerza mayor en el salón.
+
+${reasonText}Te pedimos disculpas por los inconvenientes. Podés elegir un nuevo horario que te convenga en nuestra plataforma: ${baseUrl}
+
+Saludos cordiales,
+Rove Barbería`;
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(subject)}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #09090b; color: #f4f4f5; margin: 0; padding: 24px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; margin: 0 auto; background-color: #18181b; border-radius: 12px; border: 1px solid #27272a; overflow: hidden;">
+    <tr>
+      <td style="padding: 28px; background-color: #121214; border-bottom: 1px solid #27272a; text-align: center;">
+        <h1 style="color: #fbbf24; font-size: 20px; font-weight: 800; letter-spacing: 0.15em; margin: 0; text-transform: uppercase;">ROVE</h1>
+        <p style="color: #a1a1aa; font-size: 11px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.2em;">Barbería de Autor</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 28px;">
+        <h2 style="color: #f87171; font-size: 18px; margin: 0 0 12px 0;">Aviso de Cancelación de Turno</h2>
+        <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin: 0 0 16px 0;">
+          Hola <strong style="color: #f4f4f5;">${escapeHtml(payload.customerName)}</strong>, lamentamos informarte que tuvimos que cancelar tu cita programada por razones operativas.
+        </p>
+
+        ${
+          payload.adminReason
+            ? `<div style="background-color: #27272a; border-left: 3px solid #fbbf24; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #d4d4d8;">
+                <strong>Motivo informado:</strong> ${escapeHtml(payload.adminReason)}
+               </div>`
+            : ""
+        }
+
+        <table width="100%" border="0" cellspacing="0" cellpadding="10" style="background-color: #27272a; border-radius: 8px; margin-bottom: 24px;">
+          <tr>
+            <td style="color: #a1a1aa; font-size: 13px; width: 35%;">Servicio:</td>
+            <td style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${escapeHtml(payload.serviceName)}</td>
+          </tr>
+          <tr>
+            <td style="color: #a1a1aa; font-size: 13px;">Horario previsto:</td>
+            <td style="color: #a1a1aa; font-size: 14px; text-decoration: line-through;">${escapeHtml(fullStr)}</td>
+          </tr>
+        </table>
+
+        <div style="text-align: center; margin: 24px 0 10px 0;">
+          <a href="${escapeHtml(baseUrl)}" style="background-color: #fbbf24; color: #09090b; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 13px; font-weight: 700; display: inline-block;">
+            Reprogramar en otro horario
+          </a>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 16px 28px; background-color: #121214; border-top: 1px solid #27272a; text-align: center;">
+        <p style="color: #71717a; font-size: 11px; margin: 0;">Rove Barbería — Buenos Aires</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject, html, text };
+}
+
