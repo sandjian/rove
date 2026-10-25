@@ -3,10 +3,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/* ── the curved 3D row ──────────────────────────────────────────────
- * Scroll Tilted Grid turned on its side with cylindrical perspective.
- * ─────────────────────────────────────────────────────────────── */
-
 const SLICES = 16;
 const CAMERA = 1.6;
 
@@ -30,12 +26,12 @@ function measure(
   );
   const radius = width * arc(bend);
   if (!(h > 0) || !(radius > 0))
-    return { columns: 2, sweep: 0, unit: 0, limit: 0 };
+    return { columns: 4, sweep: 60, unit: 4, limit: 50 };
   const deg = (rad: number) => (rad * 180) / Math.PI;
   const unit = deg(h / radius);
   const pitch = (aspect + gap / 100) * unit;
   const limit = deg(bend) + (aspect * unit) / 2;
-  const columns = Math.min(60, Math.max(2, Math.ceil((2 * limit) / pitch)));
+  const columns = Math.min(60, Math.max(3, Math.ceil((2 * limit) / pitch)));
   const round = (n: number) => +n.toFixed(4);
   const sweep = round((columns * pitch) / 2);
   return {
@@ -67,12 +63,12 @@ export type TiltedGridHeroProps = {
 export function TiltedGridHero({
   images,
   speed = 4,
-  tileHeight = 28,
+  tileHeight = 40,
   aspectRatio = 16 / 9,
   gap = 6,
   axis = 65,
   curve = 75,
-  fade = 14,
+  fade = 12,
   children,
   className,
   ...props
@@ -83,50 +79,59 @@ export function TiltedGridHero({
   const tile = `tgh-t-${id}`;
   const bend = (Math.min(85, Math.max(5, curve)) * Math.PI) / 180;
 
-  const [layout, setLayout] = React.useState<ReturnType<typeof measure> | null>(null);
+  // Estado del tamaño del contenedor medido en píxeles
+  const [size, setSize] = React.useState<{ width: number; height: number }>({
+    width: 1200,
+    height: 600,
+  });
+
   const [shown, setShown] = React.useState<Record<number, number>>({});
 
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      if (width === 0 || height === 0) return;
-      const next = measure(width, height, tileHeight, aspectRatio, gap, bend);
-      setLayout((prev) =>
-        prev?.columns === next.columns &&
-        prev.sweep === next.sweep &&
-        prev.unit === next.unit
-          ? prev
-          : next,
-      );
+    const updateSize = () => {
+      const rect = el.getBoundingClientRect();
+      const w = Math.round(rect.width) || window.innerWidth || 1200;
+      const h = Math.round(rect.height) || 600;
+      setSize({ width: w, height: h });
+    };
+
+    updateSize();
+
+    const ro = new ResizeObserver(() => {
+      updateSize();
     });
     ro.observe(el);
-    return () => ro.disconnect();
-  }, [tileHeight, aspectRatio, gap, bend]);
+    window.addEventListener("resize", updateSize);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateSize);
+    };
+  }, []);
 
-  // Pre-cargar imágenes para evitar parpadeos
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    for (const { src } of images) {
-      const img = new window.Image();
-      img.src = src;
-    }
-  }, [images]);
-
-  const { columns, sweep, unit, limit } =
-    layout ?? measure(1200, 680, tileHeight, aspectRatio, gap, bend);
-
-  const u = React.useCallback(
-    (n: number) =>
-      `calc(${+n.toFixed(4)} * min(${tileHeight}cqh, ${+(
-        MAX_WIDTH / aspectRatio
-      ).toFixed(4)}cqw))`,
-    [tileHeight, aspectRatio]
+  const { columns, sweep, unit, limit } = measure(
+    size.width,
+    size.height,
+    tileHeight,
+    aspectRatio,
+    gap,
+    bend,
   );
 
-  const r = 100 * arc(bend);
-  const radius = `${+r.toFixed(3)}cqw`;
+  // Altura base en píxeles calculada exactamente
+  const baseTileHeightPx = Math.min(
+    (tileHeight / 100) * size.height,
+    ((MAX_WIDTH / 100) * size.width) / aspectRatio,
+  );
+
+  const u = React.useCallback(
+    (n: number) => `${+(n * baseTileHeightPx).toFixed(2)}px`,
+    [baseTileHeightPx]
+  );
+
+  const radiusPx = size.width * arc(bend);
+  const radius = `${+radiusPx.toFixed(2)}px`;
 
   const turn = React.useCallback(
     (deg: number) =>
@@ -135,6 +140,7 @@ export function TiltedGridHero({
   );
 
   const hide = +(((sweep - limit) / (2 * sweep || 1)) * 100).toFixed(4);
+
   const css = React.useMemo(
     () =>
       `@keyframes ${orbit}{` +
@@ -151,22 +157,22 @@ export function TiltedGridHero({
     100 - fade
   }%,transparent)`;
 
+  const perspectivePx = +(radiusPx * CAMERA).toFixed(2);
+
   return (
     <div
       ref={ref}
       className={cn("relative overflow-hidden w-full", className)}
       {...props}
-      style={{ containerType: "inline-size", ...props.style }}
     >
       <style>{css}</style>
 
-      {/* Renglón cilíndrico animado */}
+      {/* Renglón cilíndrico animado visible con cálculo directo en píxeles */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 transition-opacity duration-700 overflow-hidden"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
         style={{
-          opacity: 0.85,
-          perspective: `${+(r * CAMERA).toFixed(3)}cqw`,
+          perspective: `${perspectivePx}px`,
           perspectiveOrigin: `50% ${axis}%`,
           maskImage: mask,
           WebkitMaskImage: mask,
@@ -199,9 +205,9 @@ export function TiltedGridHero({
                 <div
                   key={k}
                   className={cn(
-                    "absolute top-0 overflow-hidden bg-zinc-900 border-y border-zinc-700/30",
-                    k === 0 && "rounded-l-xl border-l",
-                    k === SLICES - 1 && "rounded-r-xl border-r",
+                    "absolute top-0 overflow-hidden bg-zinc-900 border-y border-zinc-700/40",
+                    k === 0 && "rounded-l-lg border-l",
+                    k === SLICES - 1 && "rounded-r-lg border-r",
                   )}
                   style={{
                     left: u((aspectRatio - share) / 2),
@@ -219,7 +225,7 @@ export function TiltedGridHero({
                       alt={k === 0 ? (img.alt ?? "") : ""}
                       loading="eager"
                       draggable={false}
-                      className="absolute top-0 max-w-none object-cover brightness-[0.92] contrast-[1.08] saturate-[0.9]"
+                      className="absolute top-0 max-w-none object-cover brightness-[0.88] contrast-[1.05]"
                       style={{
                         left: u(-k * share),
                         width: u(aspectRatio),
@@ -227,8 +233,8 @@ export function TiltedGridHero({
                       }}
                     />
                   ) : null}
-                  {/* Sutil viñeta para integrar los cortes cilíndricos */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30 pointer-events-none" />
+                  {/* Gradiente de profundidad */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none" />
                 </div>
               ))}
             </div>
@@ -236,10 +242,12 @@ export function TiltedGridHero({
         })}
       </div>
 
-      {/* Contenido centrado renderizado por encima */}
-      <div className="relative z-10 w-full h-full flex flex-col justify-center items-center">
-        {children}
-      </div>
+      {/* Contenido centrado */}
+      {children && (
+        <div className="relative z-10 w-full h-full flex flex-col justify-center items-center">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

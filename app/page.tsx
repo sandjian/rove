@@ -201,76 +201,73 @@ export default function HomePage() {
       {/* CONTENEDOR PRINCIPAL */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-24 sm:space-y-32">
         {/* ========================================================================= */}
-        {/* HERO SECTION LIBRE SIN CONTENEDOR CON BORDE Y TIPOGRAFÍA SUTIL */}
+        {/* HERO SECTION LIBRE CON TILTED 3D GRID VISIBLE Y TEXTOS CENTRADOS */}
         {/* ========================================================================= */}
-        <section className="relative w-full pt-4 sm:pt-10 pb-16 sm:pb-24 overflow-hidden">
-          {/* TiltedGridHero como atmósfera cilíndrica de fondo a pantalla ancha */}
-          <div className="absolute inset-0 pointer-events-none -z-10 h-full w-full">
-            <TiltedGridHero
-              images={heroGallery}
-              speed={4}
-              tileHeight={34}
-              aspectRatio={16 / 9}
-              gap={8}
-              axis={68}
-              curve={65}
-              fade={20}
-              className="w-full h-full min-h-[580px]"
-            />
-          </div>
+        <section className="relative w-full -mt-6 sm:-mt-10">
+          <TiltedGridHero
+            images={heroGallery}
+            speed={4.5}
+            tileHeight={42}
+            aspectRatio={16 / 9}
+            gap={6}
+            axis={72}
+            curve={75}
+            fade={12}
+            className="w-full min-h-[580px] sm:min-h-[640px] flex items-center justify-center py-12"
+          >
+            {/* Textos centrados flotando limpios sin caja */}
+            <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 px-4">
+              <MotionFade delay={0.1}>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-zinc-800 bg-zinc-950/80 backdrop-blur-md text-[11px] font-medium tracking-[0.25em] text-zinc-400 uppercase shadow-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Barbería de Autor &bull; Buenos Aires
+                </div>
+              </MotionFade>
 
-          {/* Textos centrados flotando limpios y etéreos */}
-          <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 px-4 relative z-10 pt-8 sm:pt-14">
-            <MotionFade delay={0.1}>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-zinc-800 bg-zinc-950/70 backdrop-blur-md text-[11px] font-medium tracking-[0.25em] text-zinc-400 uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                Barbería de Autor &bull; Buenos Aires
-              </div>
-            </MotionFade>
+              <MotionFade delay={0.2}>
+                <h1 className="font-['Krona_One',sans-serif] text-4xl sm:text-6xl md:text-7xl font-normal tracking-[0.08em] uppercase text-zinc-100 leading-[1.08] drop-shadow-xl">
+                  ROVE <br />
+                  <span className="text-zinc-500 tracking-[0.14em]">BARBER</span>
+                </h1>
+              </MotionFade>
 
-            <MotionFade delay={0.2}>
-              <h1 className="font-['Krona_One',sans-serif] text-4xl sm:text-6xl md:text-7xl font-normal tracking-[0.08em] uppercase text-zinc-100 leading-[1.08] drop-shadow-lg">
-                ROVE <br />
-                <span className="text-zinc-500 tracking-[0.14em]">BARBER</span>
-              </h1>
-            </MotionFade>
+              <MotionFade delay={0.3}>
+                <p className="text-sm sm:text-base md:text-lg text-zinc-400 max-w-xl mx-auto font-light leading-relaxed drop-shadow">
+                  Cortes clásicos, degradados modernos y perfilado tradicional de barba. 
+                  Una experiencia reservada donde la precisión artesanal se fusiona con la tecnología.
+                </p>
+              </MotionFade>
 
-            <MotionFade delay={0.3}>
-              <p className="text-sm sm:text-base md:text-lg text-zinc-400 max-w-xl mx-auto font-light leading-relaxed">
-                Cortes clásicos, degradados modernos y perfilado tradicional de barba. 
-                Una experiencia reservada donde la precisión artesanal se fusiona con la tecnología.
-              </p>
-            </MotionFade>
+              <MotionFade delay={0.4}>
+                <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+                  <Button
+                    size="lg"
+                    render={
+                      <a
+                        href="#reservar"
+                        className="rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-medium text-xs tracking-wider uppercase px-7 py-5 h-auto transition-all shadow-md flex items-center"
+                      >
+                        Reservar Turno <ArrowUpRight className="w-4 h-4 ml-1.5" />
+                      </a>
+                    }
+                  />
 
-            <MotionFade delay={0.4}>
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-                <Button
-                  size="lg"
-                  render={
-                    <a
-                      href="#reservar"
-                      className="rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-medium text-xs tracking-wider uppercase px-7 py-5 h-auto transition-all shadow-md flex items-center"
-                    >
-                      Reservar Turno <ArrowUpRight className="w-4 h-4 ml-1.5" />
-                    </a>
-                  }
-                />
-
-                <Button
-                  variant="outline"
-                  size="lg"
-                  render={
-                    <a
-                      href="#servicios"
-                      className="rounded-full border-zinc-800 hover:border-zinc-700 bg-zinc-950/60 hover:bg-zinc-900 text-zinc-300 hover:text-zinc-100 font-normal text-xs tracking-wider uppercase px-6 py-5 h-auto backdrop-blur-md transition-all flex items-center"
-                    >
-                      Ver Servicios
-                    </a>
-                  }
-                />
-              </div>
-            </MotionFade>
-          </div>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    render={
+                      <a
+                        href="#servicios"
+                        className="rounded-full border-zinc-800 hover:border-zinc-700 bg-zinc-950/80 hover:bg-zinc-900 text-zinc-300 hover:text-zinc-100 font-normal text-xs tracking-wider uppercase px-6 py-5 h-auto backdrop-blur-md transition-all flex items-center"
+                      >
+                        Ver Servicios
+                      </a>
+                    }
+                  />
+                </div>
+              </MotionFade>
+            </div>
+          </TiltedGridHero>
         </section>
 
         {/* ========================================================================= */}
