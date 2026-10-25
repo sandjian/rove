@@ -105,12 +105,6 @@ export default function HomePage() {
               </span>
             </Link>
 
-            {/* Badge píldora central ("Turnos Disponibles") */}
-            <div className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] text-[11px] font-medium tracking-wider text-slate-600 uppercase">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Turnos Disponibles Hoy
-            </div>
-
             {/* Enlaces a la derecha */}
             <nav className="flex items-center gap-6 sm:gap-8 text-xs font-semibold uppercase tracking-wider text-slate-600">
               <a href="#servicios" className="hover:text-slate-900 transition-colors">
@@ -198,54 +192,33 @@ export default function HomePage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent pointer-events-none" />
                   </div>
 
-                  {/* MINI MAPA GLASSMÓRFICO DESFASADO (Estilo Radar GPS / Google Maps de Autor) */}
-                  <div className="absolute -top-6 -left-4 sm:-top-8 sm:-left-8 z-20 w-64 sm:w-72 rounded-[1.7rem] bg-white/90 backdrop-blur-2xl border border-white shadow-[0_16px_40px_rgba(31,38,135,0.14)] p-3.5 space-y-3 transition-all hover:scale-[1.02] group">
-                    {/* Visual de Mini Mapa Estilizado Ficticio */}
-                    <div className="relative w-full h-24 rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-inner">
-                      {/* Trama urbana de calles estilizada en SVG */}
-                      <svg
-                        className="w-full h-full object-cover opacity-60"
-                        viewBox="0 0 300 120"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        {/* Calles secundarias finas */}
-                        <path d="M-20 30 Q 120 40 320 20" stroke="#334155" strokeWidth="6" />
-                        <path d="M-20 85 Q 160 80 320 95" stroke="#334155" strokeWidth="8" />
-                        <path d="M80 -10 L 110 130" stroke="#334155" strokeWidth="7" />
-                        <path d="M210 -10 L 190 130" stroke="#334155" strokeWidth="6" />
-                        
-                        {/* Avenida principal iluminada (Honduras) */}
-                        <path d="M140 -10 L 148 130" stroke="#38bdf8" strokeWidth="4" strokeOpacity="0.8" />
-                        <path d="M-20 58 Q 150 56 320 62" stroke="#60a5fa" strokeWidth="3" strokeOpacity="0.8" />
-                        
-                        {/* Manzanas urbanas sutiles */}
-                        <rect x="20" y="4" width="45" height="20" rx="3" fill="#1e293b" />
-                        <rect x="20" y="38" width="45" height="40" rx="3" fill="#1e293b" />
-                        <rect x="160" y="8" width="38" height="20" rx="3" fill="#1e293b" />
-                        <rect x="160" y="38" width="38" height="40" rx="3" fill="#1e293b" />
-                        <rect x="225" y="35" width="55" height="45" rx="3" fill="#1e293b" />
-                      </svg>
+                  {/* MINI MAPA GLASSMÓRFICO DESFASADO (Estilo Realista Google Maps / Apple Maps de Autor) */}
+                  <div className="absolute -top-6 -left-4 sm:-top-18 sm:-left-36 z-20 w-64 sm:w-72 rounded-[1.7rem] bg-white/90 backdrop-blur-2xl border border-white shadow-[0_16px_40px_rgba(31,38,135,0.14)] p-3.5 space-y-3 transition-all hover:scale-[1.02] group">
+                    {/* Visual de Mapa Cartográfico Realista de Palermo Soho */}
+                    <div className="relative w-full h-24 rounded-2xl overflow-hidden bg-[#e5e3df] border border-slate-200/80 shadow-inner">
+                      {/* Imagen cartográfica realista de calles y manzanas urbanas */}
+                      <img
+                        src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=600&q=80"
+                        alt="Mapa de Palermo Soho"
+                        className="w-full h-full object-cover filter contrast-[1.15] brightness-[0.95] saturate-[0.8]"
+                      />
+                      {/* Tinte glassmórfico de contraste suave */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-slate-900/10 pointer-events-none" />
 
-                      {/* Radar / Pulso expansivo sobre la ubicación exacta */}
-                      <div className="absolute top-[52%] left-[49%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                        <span className="absolute w-12 h-12 rounded-full bg-blue-500/25 animate-ping" />
-                        <span className="absolute w-7 h-7 rounded-full bg-sky-400/30 animate-pulse" />
-                        {/* Pin de ubicación brillante */}
-                        <div className="relative w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 border-2 border-white shadow-lg flex items-center justify-center text-white">
-                          <MapPin className="w-3.5 h-3.5 fill-white" />
+                      {/* Radar / Pulso sobre la ubicación en el mapa */}
+                      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                        <span className="absolute w-12 h-12 rounded-full bg-blue-500/30 animate-ping" />
+                        <span className="absolute w-7 h-7 rounded-full bg-sky-400/40 animate-pulse" />
+                        {/* Pin de Google Maps / Apple Maps */}
+                        <div className="relative w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 via-sky-500 to-cyan-400 border-2 border-white shadow-xl flex items-center justify-center text-white">
+                          <MapPin className="w-3.5 h-3.5 fill-white stroke-[1.8]" />
                         </div>
                       </div>
 
-                      {/* Badge flotante "Palermo Soho" en la esquina del mapa */}
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-md border border-white/10 text-[9px] font-bold uppercase tracking-wider text-slate-300">
-                        GPS &bull; Palermo Soho
-                      </div>
-
-                      {/* Chip de estado en vivo */}
-                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 backdrop-blur-md border border-emerald-400/30 text-[9px] font-semibold text-emerald-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        En Vivo
+                      {/* Badge "Palermo Soho" en la esquina inferior */}
+                      <div className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md border border-white/90 text-[9.5px] font-bold tracking-wider text-slate-800 shadow-sm flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        Palermo Soho, CABA
                       </div>
                     </div>
 
