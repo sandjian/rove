@@ -194,31 +194,95 @@ export default function HomePage() {
 
                   {/* MINI MAPA GLASSMÓRFICO DESFASADO (Estilo Realista Google Maps / Apple Maps de Autor) */}
                   <div className="absolute -top-6 -left-4 sm:-top-18 sm:-left-36 z-20 w-64 sm:w-72 rounded-[1.7rem] bg-white/90 backdrop-blur-2xl border border-white shadow-[0_16px_40px_rgba(31,38,135,0.14)] p-3.5 space-y-3 transition-all hover:scale-[1.02] group">
-                    {/* Visual de Mapa Cartográfico Realista de Palermo Soho */}
-                    <div className="relative w-full h-24 rounded-2xl overflow-hidden bg-[#e5e3df] border border-slate-200/80 shadow-inner">
-                      {/* Imagen cartográfica realista de calles y manzanas urbanas */}
-                      <img
-                        src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=600&q=80"
-                        alt="Mapa de Palermo Soho"
-                        className="w-full h-full object-cover filter contrast-[1.15] brightness-[0.95] saturate-[0.8]"
-                      />
-                      {/* Tinte glassmórfico de contraste suave */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-slate-900/10 pointer-events-none" />
+                    {/* Visual de Mapa Cartográfico estilo Uber / Google Maps Minimalista */}
+                    <div className="relative w-full h-28 rounded-2xl overflow-hidden bg-[#ebebf0] border border-slate-200/90 shadow-inner">
+                      {/* Cuadrícula Cartográfica Vectorial 1:1 estilo Uber / Google Maps */}
+                      <svg
+                        className="w-full h-full object-cover"
+                        viewBox="0 0 320 180"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        {/* Fondo base de manzanas y tierra urbana */}
+                        <rect width="320" height="180" fill="#ebebf0" />
 
-                      {/* Radar / Pulso sobre la ubicación en el mapa */}
-                      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                        <span className="absolute w-12 h-12 rounded-full bg-blue-500/30 animate-ping" />
-                        <span className="absolute w-7 h-7 rounded-full bg-sky-400/40 animate-pulse" />
-                        {/* Pin de Google Maps / Apple Maps */}
-                        <div className="relative w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 via-sky-500 to-cyan-400 border-2 border-white shadow-xl flex items-center justify-center text-white">
-                          <MapPin className="w-3.5 h-3.5 fill-white stroke-[1.8]" />
+                        {/* Áreas Verdes / Parques y Plazas estilo Uber/Maps */}
+                        <path
+                          d="M130 0 L155 0 L145 10 L125 10 Z"
+                          fill="#a3d9b1"
+                        />
+                        <path
+                          d="M190 0 L215 0 L230 18 L230 45 L220 55 L175 55 L175 16 Z"
+                          fill="#a3d9b1"
+                        />
+                        <path
+                          d="M102 30 L112 30 L112 100 L95 100 L85 88 L92 50 L102 45 Z"
+                          fill="#a3d9b1"
+                        />
+                        <path
+                          d="M185 65 L195 65 L195 105 L180 125 L165 110 L165 80 L175 70 Z"
+                          fill="#a3d9b1"
+                        />
+                        <path
+                          d="M210 140 L230 140 L230 180 L210 180 Z"
+                          fill="#a3d9b1"
+                        />
+                        {/* Pequeña esquina de agua */}
+                        <path d="M0 155 L10 155 L10 180 L0 180 Z" fill="#9bc2f7" />
+
+                        {/* CALLES Y AVENIDAS (Trazadas en blanco puro con bordes nítidos) */}
+                        {/* Avenidas verticales */}
+                        <rect x="0" y="0" width="10" height="180" fill="#ffffff" />
+                        <rect x="55" y="0" width="8" height="180" fill="#ffffff" />
+                        <rect x="118" y="0" width="10" height="180" fill="#ffffff" />
+                        <rect x="172" y="0" width="9" height="180" fill="#ffffff" />
+                        <rect x="232" y="0" width="10" height="180" fill="#ffffff" />
+
+                        {/* Calles diagonales estilo Palermo / Uber */}
+                        <path d="M75 180 L175 80 L185 88 L90 180 Z" fill="#ffffff" />
+                        <path d="M172 80 L235 142 L228 150 L165 88 Z" fill="#ffffff" />
+
+                        {/* Calles horizontales */}
+                        <rect x="0" y="24" width="320" height="8" fill="#ffffff" />
+                        <rect x="0" y="58" width="320" height="9" fill="#ffffff" />
+                        <rect x="118" y="92" width="202" height="8" fill="#ffffff" />
+                        <rect x="0" y="128" width="320" height="8" fill="#ffffff" />
+
+                        {/* Subdivisión de manzanas */}
+                        <rect x="142" y="24" width="7" height="34" fill="#ffffff" />
+
+                        {/* Trazado de ruta / recorrido celeste sutil (Estilo GPS navegando hacia la barbería) */}
+                        <path
+                          d="M59 132 L59 62 L123 62 L123 28"
+                          stroke="#38bdf8"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+
+                      {/* Sombra viñeta sutil en los bordes para profundidad */}
+                      <div className="absolute inset-0 ring-1 ring-inset ring-slate-900/5 rounded-2xl pointer-events-none" />
+
+                      {/* Pin Central Uber / Google Maps con onda de pulso */}
+                      <div className="absolute top-[48%] left-[45%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                        <span className="absolute w-12 h-12 rounded-full bg-sky-400/25 animate-ping" />
+                        <span className="absolute w-7 h-7 rounded-full bg-blue-500/20 animate-pulse" />
+                        
+                        {/* Marcador de barbería estilo Uber/Google Maps */}
+                        <div className="relative flex flex-col items-center">
+                          <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-white shadow-xl flex items-center justify-center text-white">
+                            <Scissors className="w-3.5 h-3.5 text-sky-400 -rotate-45" />
+                          </div>
+                          {/* Triángulo inferior del pin */}
+                          <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-slate-900 -mt-[1px]" />
                         </div>
                       </div>
 
-                      {/* Badge "Palermo Soho" en la esquina inferior */}
-                      <div className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md border border-white/90 text-[9.5px] font-bold tracking-wider text-slate-800 shadow-sm flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                        Palermo Soho, CABA
+                      {/* Pill etiqueta flotante sobre la calle con estilo Uber Maps */}
+                      <div className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/80 text-[9px] font-bold tracking-wide text-slate-800 shadow-sm flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                        Honduras &bull; Palermo Soho
                       </div>
                     </div>
 
