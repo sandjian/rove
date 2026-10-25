@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookingFlow } from "@/app/components/booking-flow";
 import { MotionFade, MotionStaggerContainer, MotionStaggerItem } from "@/app/components/motion-fade";
-import { FloatingPathsBackground } from "@/app/components/floating-paths";
 
 export default function HomePage() {
   const stats = [
@@ -93,9 +92,6 @@ export default function HomePage() {
         <section className="relative rounded-[2rem] sm:rounded-[2.5rem] bg-white/45 backdrop-blur-2xl border border-white/70 shadow-[0_12px_40px_0_rgba(31,38,135,0.06)] p-6 sm:p-10 lg:p-12 overflow-hidden">
           {/* Brillo especular superior */}
           <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
-
-          {/* Componente visual de líneas fluidas de fondo */}
-          <FloatingPathsBackground position={1} className="absolute inset-0 pointer-events-none" />
 
           {/* BARRA DE NAVEGACIÓN SUPERIOR */}
           <header className="relative z-10 flex items-center justify-between pb-8 sm:pb-12 border-b border-white/50">
