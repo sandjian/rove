@@ -184,8 +184,8 @@ export default function HomePage() {
               </MotionFade>
             </div>
 
-            {/* LADO DERECHO: IMAGEN DEL BARBERO CON CONTENEDOR GOOGLE MAPS Y SELLO 360 */}
-            <div className="lg:col-span-5 relative flex justify-center">
+            {/* LADO DERECHO: IMAGEN DEL BARBERO CON MINIMAPA GLASSMORFICO DESFASADO Y SELLO 360 */}
+            <div className="lg:col-span-5 relative flex justify-center pt-6 lg:pt-0">
               <MotionFade delay={0.3} direction="left">
                 <div className="relative w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[2rem] p-2.5 bg-white/40 border border-white/80 shadow-[0_20px_50px_rgba(31,38,135,0.08)] backdrop-blur-xl">
                   {/* Contenedor de la foto */}
@@ -196,37 +196,86 @@ export default function HomePage() {
                       className="w-full h-full object-cover object-center filter contrast-[1.05] brightness-[1.02]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent pointer-events-none" />
+                  </div>
 
-                    {/* Contenedor Solapado estilo Google Maps sobre la foto */}
-                    <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 p-3 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.12)] flex items-center justify-between gap-3 group transition-transform hover:scale-[1.01]">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0">
-                          <MapPin className="w-4 h-4 fill-red-500/20" />
-                        </div>
-                        <div className="min-w-0 text-left">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-slate-900 truncate">Honduras 4872</span>
-                            <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">
-                              Abierto
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-slate-500 truncate">Palermo Soho, CABA &bull; 4.9 ★ (320+)</p>
+                  {/* MINI MAPA GLASSMÓRFICO DESFASADO (Estilo Radar GPS / Google Maps de Autor) */}
+                  <div className="absolute -top-6 -left-4 sm:-top-8 sm:-left-8 z-20 w-64 sm:w-72 rounded-[1.7rem] bg-white/90 backdrop-blur-2xl border border-white shadow-[0_16px_40px_rgba(31,38,135,0.14)] p-3.5 space-y-3 transition-all hover:scale-[1.02] group">
+                    {/* Visual de Mini Mapa Estilizado Ficticio */}
+                    <div className="relative w-full h-24 rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-inner">
+                      {/* Trama urbana de calles estilizada en SVG */}
+                      <svg
+                        className="w-full h-full object-cover opacity-60"
+                        viewBox="0 0 300 120"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        {/* Calles secundarias finas */}
+                        <path d="M-20 30 Q 120 40 320 20" stroke="#334155" strokeWidth="6" />
+                        <path d="M-20 85 Q 160 80 320 95" stroke="#334155" strokeWidth="8" />
+                        <path d="M80 -10 L 110 130" stroke="#334155" strokeWidth="7" />
+                        <path d="M210 -10 L 190 130" stroke="#334155" strokeWidth="6" />
+                        
+                        {/* Avenida principal iluminada (Honduras) */}
+                        <path d="M140 -10 L 148 130" stroke="#38bdf8" strokeWidth="4" strokeOpacity="0.8" />
+                        <path d="M-20 58 Q 150 56 320 62" stroke="#60a5fa" strokeWidth="3" strokeOpacity="0.8" />
+                        
+                        {/* Manzanas urbanas sutiles */}
+                        <rect x="20" y="4" width="45" height="20" rx="3" fill="#1e293b" />
+                        <rect x="20" y="38" width="45" height="40" rx="3" fill="#1e293b" />
+                        <rect x="160" y="8" width="38" height="20" rx="3" fill="#1e293b" />
+                        <rect x="160" y="38" width="38" height="40" rx="3" fill="#1e293b" />
+                        <rect x="225" y="35" width="55" height="45" rx="3" fill="#1e293b" />
+                      </svg>
+
+                      {/* Radar / Pulso expansivo sobre la ubicación exacta */}
+                      <div className="absolute top-[52%] left-[49%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                        <span className="absolute w-12 h-12 rounded-full bg-blue-500/25 animate-ping" />
+                        <span className="absolute w-7 h-7 rounded-full bg-sky-400/30 animate-pulse" />
+                        {/* Pin de ubicación brillante */}
+                        <div className="relative w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 border-2 border-white shadow-lg flex items-center justify-center text-white">
+                          <MapPin className="w-3.5 h-3.5 fill-white" />
                         </div>
                       </div>
+
+                      {/* Badge flotante "Palermo Soho" en la esquina del mapa */}
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-md border border-white/10 text-[9px] font-bold uppercase tracking-wider text-slate-300">
+                        GPS &bull; Palermo Soho
+                      </div>
+
+                      {/* Chip de estado en vivo */}
+                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 backdrop-blur-md border border-emerald-400/30 text-[9px] font-semibold text-emerald-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        En Vivo
+                      </div>
+                    </div>
+
+                    {/* Información de dirección y llamado a la acción */}
+                    <div className="flex items-center justify-between gap-3 pt-0.5">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-xs font-bold text-slate-900 tracking-tight">Honduras 4872</h4>
+                          <span className="text-[10px] text-amber-500 font-bold flex items-center">
+                            ★ 4.9
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate">Buenos Aires &bull; Estacionamiento exclusivo</p>
+                      </div>
+
+                      {/* Botón interactivo a Google Maps */}
                       <a
                         href="https://maps.google.com/?q=Honduras+4872+Palermo+Buenos+Aires"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0 p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
-                        title="Abrir en Google Maps"
+                        className="shrink-0 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-sky-400 hover:opacity-95 text-white font-semibold text-[11px] transition-all shadow-sm shadow-blue-500/25 flex items-center gap-1"
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Cómo llegar</span>
+                        <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
                   </div>
 
                   {/* Sello circular flotante giratorio en la esquina inferior derecha con texto 100% circunferencia */}
-                  <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white/90 border border-white shadow-[0_12px_36px_rgba(31,38,135,0.15)] backdrop-blur-2xl flex items-center justify-center p-2 group cursor-pointer hover:scale-105 transition-transform">
+                  <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white/90 border border-white shadow-[0_12px_36px_rgba(31,38,135,0.15)] backdrop-blur-2xl flex items-center justify-center p-2 group cursor-pointer hover:scale-105 transition-transform z-20">
                     <div className="relative w-full h-full flex items-center justify-center">
                       {/* Texto circular giratorio que abarca el 100% exacto de la circunferencia */}
                       <svg className="w-full h-full animate-[spin_14s_linear_infinite]" viewBox="0 0 100 100">
