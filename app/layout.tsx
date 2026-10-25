@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Krona_One, Syne } from "next/font/google";
+import { Geist_Mono, Krona_One, Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-body",
+  subsets: ["latin"],
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
 });
 
@@ -15,11 +20,6 @@ const geistMono = Geist_Mono({
 const kronaOne = Krona_One({
   variable: "--font-krona",
   weight: "400",
-  subsets: ["latin"],
-});
-
-const syne = Syne({
-  variable: "--font-syne",
   subsets: ["latin"],
 });
 
@@ -54,7 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${kronaOne.variable} ${syne.variable} h-full antialiased dark`}
+      className={`${spaceGrotesk.variable} ${plusJakarta.variable} ${geistMono.variable} ${kronaOne.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-200 selection:text-zinc-950">
         {children}
