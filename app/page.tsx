@@ -193,34 +193,120 @@ export default function HomePage() {
                   </div>
 
                   {/* MINI MAPA GLASSMÓRFICO DESFASADO (Google Maps Real Interactivo) */}
-                  <div className="absolute -top-6 -left-4 sm:-top-18 sm:-left-48 z-20 w-72 sm:w-80 rounded-[1.7rem] bg-white/95 backdrop-blur-2xl border border-white shadow-[0_16px_40px_rgba(31,38,135,0.16)] p-3.5 space-y-3 transition-all hover:scale-[1.02] group">
-                    {/* Contenedor Iframe Real de Google Maps */}
-                    <div className="relative w-full h-36 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/90 shadow-inner">
-                      <iframe
-                        title="Mapa de Rove Barbería y Peluquería"
-                        src="https://maps.google.com/maps?q=San+Juan+910,+B7600+Mar+del+Plata,+Provincia+de+Buenos+Aires&t=&z=16&ie=UTF8&iwloc=&output=embed"
-                        className="w-full h-full border-0 filter contrast-[1.05] brightness-[0.98]"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                      />
+                  <div className="absolute -top-6 -left-4 sm:-top-24 sm:-left-48 z-20 w-72 sm:w-80 rounded-[1.7rem] bg-white/95 backdrop-blur-2xl border border-white shadow-[0_16px_40px_rgba(31,38,135,0.16)] p-2 space-y-3 transition-all hover:scale-[1.02] group">
+                    {/* Contenedor Cartográfico de Autor estilo Uber / Mapbox Light */}
+                    <div className="relative w-full h-36 rounded-2xl overflow-hidden bg-[#ededf2] border border-slate-200/80 shadow-inner select-none">
+                      {/* Cuadrícula Cartográfica Vectorial 1:1 estilo Uber / Apple Maps Minimalista */}
+                      <svg
+                        className="w-full h-full object-cover"
+                        viewBox="0 0 340 160"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        {/* 1. Tierra / Manzanas urbanas base */}
+                        <rect width="340" height="160" fill="#ededf2" />
 
-                      {/* Pill flotante indicativo en la esquina inferior */}
-                      <div className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/80 text-[9.5px] font-bold tracking-wide text-slate-800 shadow-sm flex items-center gap-1.5 pointer-events-none">
+                        {/* 2. Parques y Espacios Verdes Geométricos estilo Uber */}
+                        <path
+                          d="M135 0 L168 0 L158 12 L130 12 Z"
+                          fill="#b2e2c2"
+                        />
+                        <path
+                          d="M205 0 L235 0 L250 20 L250 50 L238 60 L188 60 L188 18 Z"
+                          fill="#b2e2c2"
+                        />
+                        <path
+                          d="M110 32 L122 32 L122 98 L104 98 L94 86 L100 52 L110 46 Z"
+                          fill="#b2e2c2"
+                        />
+                        <path
+                          d="M198 70 L210 70 L210 108 L194 128 L178 112 L178 84 L188 74 Z"
+                          fill="#b2e2c2"
+                        />
+                        <path
+                          d="M230 135 L252 135 L252 160 L230 160 Z"
+                          fill="#b2e2c2"
+                        />
+                        {/* Costanera / Agua en la esquina este */}
+                        <path d="M0 135 L12 135 L12 160 L0 160 Z" fill="#a8cbf5" />
+
+                        {/* 3. Calles y Avenidas en blanco nítido */}
+                        {/* Avenidas verticales */}
+                        <rect x="0" y="0" width="12" height="160" fill="#ffffff" />
+                        <rect x="60" y="0" width="9" height="160" fill="#ffffff" />
+                        {/* Calle San Juan (Avenida destacada) */}
+                        <rect x="125" y="0" width="12" height="160" fill="#ffffff" />
+                        <rect x="185" y="0" width="10" height="160" fill="#ffffff" />
+                        <rect x="250" y="0" width="11" height="160" fill="#ffffff" />
+
+                        {/* Diagonales de intersección */}
+                        <path d="M80 160 L185 65 L196 73 L100 160 Z" fill="#ffffff" />
+                        <path d="M185 65 L250 125 L242 133 L178 73 Z" fill="#ffffff" />
+
+                        {/* Calles horizontales (Av. Luro, San Martín, Rivadavia) */}
+                        <rect x="0" y="20" width="340" height="9" fill="#ffffff" />
+                        <rect x="0" y="55" width="340" height="10" fill="#ffffff" />
+                        <rect x="125" y="90" width="215" height="9" fill="#ffffff" />
+                        <rect x="0" y="122" width="340" height="9" fill="#ffffff" />
+
+                        {/* Separadores de manzanas */}
+                        <rect x="152" y="20" width="8" height="35" fill="#ffffff" />
+
+                        {/* Trazado de ruta GPS celeste sutil con destino en la barbería */}
+                        <path
+                          d="M64 126 L64 60 L131 60 L131 35"
+                          stroke="#38bdf8"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+
+                        {/* Etiquetas tipográficas ultra-finas de calles */}
+                        <text x="131" y="12" fill="#94a3b8" fontSize="6.5" fontWeight="700" letterSpacing="0.8">
+                          SAN JUAN
+                        </text>
+                        <text x="16" y="52" fill="#94a3b8" fontSize="6" fontWeight="600" letterSpacing="0.5">
+                          AV. PEDRO LURO
+                        </text>
+                        <text x="16" y="119" fill="#94a3b8" fontSize="6" fontWeight="600" letterSpacing="0.5">
+                          RIVADAVIA
+                        </text>
+                      </svg>
+
+                      {/* Sombra viñeta interna de vidrio suave */}
+                      <div className="absolute inset-0 ring-1 ring-inset ring-slate-900/5 rounded-2xl pointer-events-none" />
+
+                      {/* Marcador GPS / Pin con estilo de autor */}
+                      <div className="absolute top-[40%] left-[38.5%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                        <span className="absolute w-12 h-12 rounded-full bg-sky-400/25 animate-ping" />
+                        <span className="absolute w-7 h-7 rounded-full bg-blue-500/20 animate-pulse" />
+
+                        {/* Pin elegante estilo Uber */}
+                        <div className="relative flex flex-col items-center">
+                          <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-white shadow-xl flex items-center justify-center text-white">
+                            <Scissors className="w-3.5 h-3.5 text-sky-400 -rotate-45" />
+                          </div>
+                          <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-slate-900 -mt-[1px]" />
+                        </div>
+                      </div>
+
+                      {/* Píldora sutil sobre la calle */}
+                      <div className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/80 text-[9px] font-bold tracking-wide text-slate-800 shadow-sm flex items-center gap-1.5 pointer-events-none">
                         <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                        San Juan 910 &bull; Mar del Plata
+                        San Juan 910 &bull; MDP
                       </div>
                     </div>
 
                     {/* Información de dirección y llamado a la acción */}
                     <div className="flex items-center justify-between gap-3 pt-0.5">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 px-1">
                           <h4 className="text-xs font-bold text-slate-900 tracking-tight truncate">San Juan 910</h4>
                           <span className="text-[10px] text-amber-500 font-bold shrink-0">
                             ★ 4.9
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 truncate">Mar del Plata &bull; Buenos Aires</p>
+                        <p className="text-[11px] p-1 text-slate-500 truncate">Mar del Plata &bull; Buenos Aires</p>
                       </div>
 
                       {/* Botón interactivo a Google Maps */}
