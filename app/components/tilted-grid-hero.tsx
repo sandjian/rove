@@ -10,7 +10,8 @@ function arc(bend: number) {
   return (CAMERA - 1 + Math.cos(bend)) / (2 * CAMERA * Math.sin(bend));
 }
 
-const MAX_WIDTH = 55;
+// Reducimos el ancho máximo de la tarjeta para que sea mucho más sutil y compacta
+const MAX_WIDTH = 38;
 
 function measure(
   width: number,
@@ -31,7 +32,7 @@ function measure(
   const unit = deg(h / radius);
   const pitch = (aspect + gap / 100) * unit;
   const limit = deg(bend) + (aspect * unit) / 2;
-  const columns = Math.min(60, Math.max(3, Math.ceil((2 * limit) / pitch)));
+  const columns = Math.min(60, Math.max(4, Math.ceil((2 * limit) / pitch)));
   const round = (n: number) => +n.toFixed(4);
   const sweep = round((columns * pitch) / 2);
   return {
@@ -153,9 +154,10 @@ export function TiltedGridHero({
 
   const share = aspectRatio / SLICES;
   const duration = columns * speed;
-  const mask = `linear-gradient(90deg,transparent,#000 ${fade}%,#000 ${
-    100 - fade
-  }%,transparent)`;
+
+  // Máscara compuesta suave: se desvanece en los extremos izquierdo/derecho Y en la parte superior/inferior
+  // para integrarse con sutileza con el fondo sin cortes toscos.
+  const mask = `radial-gradient(ellipse 90% 80% at 50% ${axis}%, #000 40%, rgba(0,0,0,0.6) 70%, transparent 100%)`;
 
   const perspectivePx = +(radiusPx * CAMERA).toFixed(2);
 
@@ -225,7 +227,7 @@ export function TiltedGridHero({
                       alt={k === 0 ? (img.alt ?? "") : ""}
                       loading="eager"
                       draggable={false}
-                      className="absolute top-0 max-w-none object-cover brightness-[0.88] contrast-[1.05]"
+                      className="absolute top-0 max-w-none object-cover brightness-[0.78] contrast-[1.08] saturate-[0.85]"
                       style={{
                         left: u(-k * share),
                         width: u(aspectRatio),
@@ -233,14 +235,18 @@ export function TiltedGridHero({
                       }}
                     />
                   ) : null}
-                  {/* Gradiente de profundidad */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none" />
+                  {/* Gradiente de profundidad y sombra de borde suave */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/50 pointer-events-none" />
                 </div>
               ))}
             </div>
           );
         })}
       </div>
+
+      {/* Gradientes atmosféricos de desvanecimiento superior e inferior para fundir con el fondo general */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#0a0a0c] to-transparent z-[1]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0a0a0c] to-transparent z-[1]" />
 
       {/* Contenido centrado */}
       {children && (

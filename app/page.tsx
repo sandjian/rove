@@ -207,12 +207,12 @@ export default function HomePage() {
           <TiltedGridHero
             images={heroGallery}
             speed={4.5}
-            tileHeight={42}
+            tileHeight={24}
             aspectRatio={16 / 9}
             gap={6}
-            axis={72}
-            curve={75}
-            fade={12}
+            axis={78}
+            curve={70}
+            fade={15}
             className="w-full min-h-[580px] sm:min-h-[640px] flex items-center justify-center py-12"
           >
             {/* Textos centrados flotando limpios sin caja */}
