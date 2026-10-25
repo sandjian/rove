@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookingFlow } from "@/app/components/booking-flow";
 import { MotionFade, MotionStaggerContainer, MotionStaggerItem } from "@/app/components/motion-fade";
+import { FloatingPathsBackground } from "@/app/components/floating-paths";
 
 export default function HomePage() {
   const stats = [
@@ -93,8 +94,11 @@ export default function HomePage() {
           {/* Brillo especular superior */}
           <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
 
+          {/* Componente visual de líneas fluidas de fondo */}
+          <FloatingPathsBackground position={1} className="absolute inset-0 pointer-events-none" />
+
           {/* BARRA DE NAVEGACIÓN SUPERIOR */}
-          <header className="flex items-center justify-between pb-8 sm:pb-12 border-b border-white/50">
+          <header className="relative z-10 flex items-center justify-between pb-8 sm:pb-12 border-b border-white/50">
             {/* Logo a la izquierda */}
             <Link href="/" className="flex items-center gap-2 group">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 via-sky-400 to-cyan-300 flex items-center justify-center text-white shadow-sm shadow-blue-400/30 font-bold text-xs">
@@ -126,7 +130,7 @@ export default function HomePage() {
           </header>
 
           {/* CONTENIDO DEL HERO */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center pt-10 sm:pt-14 pb-4">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center pt-10 sm:pt-14 pb-4">
             {/* LADO IZQUIERDO: TÍTULO GIGANTE CRISTALINO, SUBTÍTULO Y BOTONES */}
             <div className="lg:col-span-7 space-y-6 sm:space-y-8">
               <MotionFade delay={0.1}>
@@ -184,10 +188,10 @@ export default function HomePage() {
               </MotionFade>
             </div>
 
-            {/* LADO DERECHO: IMAGEN DEL BARBERO CON ELEMENTO CIRCULAR FLOTANTE */}
+            {/* LADO DERECHO: IMAGEN DEL BARBERO CON CONTENEDOR GOOGLE MAPS Y SELLO 360 */}
             <div className="lg:col-span-5 relative flex justify-center">
               <MotionFade delay={0.3} direction="left">
-                <div className="relative w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[2rem] overflow-hidden p-2.5 bg-white/40 border border-white/80 shadow-[0_20px_50px_rgba(31,38,135,0.08)] backdrop-blur-xl">
+                <div className="relative w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[2rem] p-2.5 bg-white/40 border border-white/80 shadow-[0_20px_50px_rgba(31,38,135,0.08)] backdrop-blur-xl">
                   {/* Contenedor de la foto */}
                   <div className="relative w-full h-full rounded-[1.6rem] overflow-hidden bg-slate-100">
                     <img
@@ -195,28 +199,57 @@ export default function HomePage() {
                       alt="Barbero Rove"
                       className="w-full h-full object-cover object-center filter contrast-[1.05] brightness-[1.02]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent pointer-events-none" />
+
+                    {/* Contenedor Solapado estilo Google Maps sobre la foto */}
+                    <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 p-3 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.12)] flex items-center justify-between gap-3 group transition-transform hover:scale-[1.01]">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0">
+                          <MapPin className="w-4 h-4 fill-red-500/20" />
+                        </div>
+                        <div className="min-w-0 text-left">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-slate-900 truncate">Honduras 4872</span>
+                            <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">
+                              Abierto
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 truncate">Palermo Soho, CABA &bull; 4.9 ★ (320+)</p>
+                        </div>
+                      </div>
+                      <a
+                        href="https://maps.google.com/?q=Honduras+4872+Palermo+Buenos+Aires"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
+                        title="Abrir en Google Maps"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
                   </div>
 
-                  {/* Sello circular flotante giratorio en la esquina inferior derecha */}
-                  <div className="absolute -bottom-2 -right-2 sm:bottom-4 sm:right-4 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white/80 border border-white shadow-xl backdrop-blur-2xl flex items-center justify-center p-2 group cursor-pointer">
+                  {/* Sello circular flotante giratorio en la esquina inferior derecha con texto 100% circunferencia */}
+                  <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white/90 border border-white shadow-[0_12px_36px_rgba(31,38,135,0.15)] backdrop-blur-2xl flex items-center justify-center p-2 group cursor-pointer hover:scale-105 transition-transform">
                     <div className="relative w-full h-full flex items-center justify-center">
-                      {/* Texto circular giratorio simulado */}
-                      <svg className="w-full h-full animate-[spin_12s_linear_infinite]" viewBox="0 0 100 100">
+                      {/* Texto circular giratorio que abarca el 100% exacto de la circunferencia */}
+                      <svg className="w-full h-full animate-[spin_14s_linear_infinite]" viewBox="0 0 100 100">
                         <path
-                          id="circlePath"
+                          id="circlePath360"
                           d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
                           fill="none"
                         />
-                        <text className="text-[8.5px] uppercase font-bold tracking-[0.24em] fill-slate-600">
-                          <textPath href="#circlePath">
-                            &bull; ROVE BARBERIA &bull; EST. 2026
+                        <text className="text-[7.6px] uppercase font-bold tracking-[0.16em] fill-slate-700">
+                          <textPath href="#circlePath360">
+                            ROVE BARBERIA &bull; EST. 2026 &bull; BUENOS AIRES &bull;
                           </textPath>
                         </text>
                       </svg>
-                      {/* Ícono central brillante */}
+                      {/* Ícono central brillante con degradé */}
                       <div className="absolute inset-0 flex items-center justify-center text-blue-500">
-                        <Sparkles className="w-6 h-6 animate-pulse" />
+                        <div className="w-9 h-9 rounded-full bg-blue-50/80 border border-blue-100 flex items-center justify-center shadow-inner">
+                          <Sparkles className="w-4 h-4 text-blue-500 animate-pulse" />
+                        </div>
                       </div>
                     </div>
                   </div>
