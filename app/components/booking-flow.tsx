@@ -30,7 +30,7 @@ const SERVICE_IMAGES_BY_SLUG: Record<string, { image: string; tag: string }> = {
     tag: "Firma Rove",
   },
   "corte-infantil": {
-    image: "https://images.unsplash.com/photo-1517832606589-7629c3395909?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=800&q=80",
     tag: "Paciencia & Estilo",
   },
 };
