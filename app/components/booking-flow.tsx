@@ -16,8 +16,7 @@ interface BookingFlowProps {
   initialServices?: ServiceDto[];
 }
 
-// Mapeo de imágenes y badges acordes a cada servicio para las tarjetas alargadas
-const SERVICE_IMAGES: Record<string, { image: string; tag: string }> = {
+const SERVICE_IMAGES_BY_SLUG: Record<string, { image: string; tag: string }> = {
   "corte-clasico": {
     image: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=800&q=80",
     tag: "Técnica Milimétrica",
@@ -35,6 +34,24 @@ const SERVICE_IMAGES: Record<string, { image: string; tag: string }> = {
     tag: "Paciencia & Estilo",
   },
 };
+
+function getServiceMeta(service: ServiceDto): { image: string; tag: string } {
+  const normalized = service.name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (normalized.includes("combo") || normalized.includes("corte + barba")) {
+    return SERVICE_IMAGES_BY_SLUG["combo-rove"];
+  }
+  if (normalized.includes("infantil") || normalized.includes("nino")) {
+    return SERVICE_IMAGES_BY_SLUG["corte-infantil"];
+  }
+  if (normalized.includes("barba") || normalized.includes("perfilado")) {
+    return SERVICE_IMAGES_BY_SLUG["perfilado-barba"];
+  }
+  return SERVICE_IMAGES_BY_SLUG["corte-clasico"];
+}
 
 export function BookingFlow({ initialServices }: BookingFlowProps) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -157,22 +174,20 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             type="button"
             onClick={() => setStep(1)}
             disabled={step === 4}
-            className={`flex items-center gap-2 transition-all ${
-              step === 1
-                ? "text-[#a9773c] font-bold"
-                : step > 1
+            className={`flex items-center gap-2 transition-all ${step === 1
+              ? "text-[#a9773c] font-bold"
+              : step > 1
                 ? "text-slate-600 hover:text-slate-900"
                 : "text-slate-400 cursor-not-allowed"
-            }`}
+              }`}
           >
             <span
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                step === 1
-                  ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
-                  : step > 1
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${step === 1
+                ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
+                : step > 1
                   ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
-              }`}
+                }`}
             >
               1
             </span>
@@ -185,22 +200,20 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             type="button"
             onClick={() => selectedService && setStep(2)}
             disabled={!selectedService || step === 4}
-            className={`flex items-center gap-2 transition-all ${
-              step === 2
-                ? "text-[#a9773c] font-bold"
-                : step > 2
+            className={`flex items-center gap-2 transition-all ${step === 2
+              ? "text-[#a9773c] font-bold"
+              : step > 2
                 ? "text-slate-600 hover:text-slate-900"
                 : "text-slate-400 cursor-not-allowed"
-            }`}
+              }`}
           >
             <span
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                step === 2
-                  ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
-                  : step > 2
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${step === 2
+                ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
+                : step > 2
                   ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
-              }`}
+                }`}
             >
               2
             </span>
@@ -213,22 +226,20 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             type="button"
             onClick={() => selectedSlot && setStep(3)}
             disabled={!selectedSlot || step === 4}
-            className={`flex items-center gap-2 transition-all ${
-              step === 3
-                ? "text-[#a9773c] font-bold"
-                : step > 3
+            className={`flex items-center gap-2 transition-all ${step === 3
+              ? "text-[#a9773c] font-bold"
+              : step > 3
                 ? "text-slate-600 hover:text-slate-900"
                 : "text-slate-400 cursor-not-allowed"
-            }`}
+              }`}
           >
             <span
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                step === 3
-                  ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
-                  : step > 3
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${step === 3
+                ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
+                : step > 3
                   ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
-              }`}
+                }`}
             >
               3
             </span>
@@ -273,21 +284,17 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {services.map((service) => {
                 const isSelected = selectedService?.id === service.id;
-                const meta = SERVICE_IMAGES[service.id] ?? {
-                  image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
-                  tag: "Autor",
-                };
+                const meta = getServiceMeta(service);
 
                 return (
                   <button
                     key={service.id}
                     type="button"
                     onClick={() => handleSelectService(service)}
-                    className={`group relative text-left rounded-[1.8rem] overflow-hidden border transition-all duration-300 flex flex-col justify-between min-h-[340px] sm:min-h-[380px] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 ${
-                      isSelected
-                        ? "border-[#a9773c] ring-2 ring-[#a9773c]/50 shadow-[0_12px_32px_rgba(169,119,60,0.2)]"
-                        : "border-white/80 hover:border-[#a9773c]/40 bg-white/50"
-                    }`}
+                    className={`group relative text-left rounded-[1.8rem] overflow-hidden border transition-all duration-300 flex flex-col justify-between min-h-[340px] sm:min-h-[380px] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 ${isSelected
+                      ? "border-[#a9773c] ring-2 ring-[#a9773c]/50 shadow-[0_12px_32px_rgba(169,119,60,0.2)]"
+                      : "border-white/80 hover:border-[#a9773c]/40 bg-white/50"
+                      }`}
                   >
                     {/* Fondo fotográfico con gradiente oscurecedor superior/inferior para legibilidad perfecta */}
                     <div className="absolute inset-0 z-0 overflow-hidden">
@@ -296,8 +303,8 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                         alt={service.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter brightness-[0.72] contrast-[1.08]"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/30" />
-                      <div className="absolute inset-0 bg-[#a9773c]/15 mix-blend-overlay" />
+                      <div className="absolute inset-0 " />
+                      <div className="absolute inset-0  mix-blend-overlay" />
                     </div>
 
                     {/* Contenido Superior: Tag y Duración */}
@@ -396,11 +403,10 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                         key={day.dateKey}
                         type="button"
                         onClick={() => setSelectedDayKey(day.dateKey)}
-                        className={`p-3 rounded-2xl border text-center transition-all duration-150 ${
-                          isDaySelected
-                            ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-bold border-transparent shadow-md shadow-[#a9773c]/30"
-                            : "bg-white/80 border-slate-200/70 text-slate-700 hover:bg-white hover:border-[#a9773c]/30 shadow-sm"
-                        }`}
+                        className={`p-3 rounded-2xl border text-center transition-all duration-150 ${isDaySelected
+                          ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-bold border-transparent shadow-md shadow-[#a9773c]/30"
+                          : "bg-white/80 border-slate-200/70 text-slate-700 hover:bg-white hover:border-[#a9773c]/30 shadow-sm"
+                          }`}
                       >
                         <div className={`text-[11px] uppercase tracking-wide font-medium ${isDaySelected ? "text-white/90" : "text-slate-400"}`}>
                           {day.dayLabel.split(" ")[0]}
@@ -431,11 +437,10 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                           key={slot.startIso}
                           type="button"
                           onClick={() => handleSelectSlot(slot)}
-                          className={`py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all ${
-                            isSlotSelected
-                              ? "bg-gradient-to-r from-[#a9773c] to-[#c49257] text-white border-transparent shadow-md shadow-[#a9773c]/25"
-                              : "bg-white/90 border-slate-200/80 text-slate-800 hover:border-[#a9773c] hover:text-[#a9773c] shadow-sm hover:bg-white"
-                          }`}
+                          className={`py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all ${isSlotSelected
+                            ? "bg-gradient-to-r from-[#a9773c] to-[#c49257] text-white border-transparent shadow-md shadow-[#a9773c]/25"
+                            : "bg-white/90 border-slate-200/80 text-slate-800 hover:border-[#a9773c] hover:text-[#a9773c] shadow-sm hover:bg-white"
+                            }`}
                         >
                           {slot.timeLabel}
                         </button>

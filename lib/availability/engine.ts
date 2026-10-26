@@ -63,7 +63,8 @@ export function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
   const second = getPart("second");
 
   const localAsUtc = Date.UTC(year, month, day, hour, minute, second);
-  return localAsUtc - date.getTime();
+  const dateSecondsMs = Math.floor(date.getTime() / 1000) * 1000;
+  return localAsUtc - dateSecondsMs;
 }
 
 /**
