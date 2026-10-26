@@ -114,6 +114,8 @@ export function AvailabilityManager({ initialWindows }: AvailabilityManagerProps
           endAt: endIso,
           isBlocked: true,
           reason: blockReason.trim() || "Bloqueo administrativo",
+          formattedTime: `${blockStartTime} - ${blockEndTime}`,
+          formattedDate: blockDate,
         },
         ...prev,
       ]);
@@ -340,21 +342,6 @@ export function AvailabilityManager({ initialWindows }: AvailabilityManagerProps
             windows
               .filter((w) => w.isBlocked)
               .map((block) => {
-                const start = new Date(block.startAt);
-                const end = new Date(block.endAt);
-                const dateLabel = start.toLocaleDateString("es-AR", {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                });
-                const timeLabel = `${start.toLocaleTimeString("es-AR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })} - ${end.toLocaleTimeString("es-AR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`;
-
                 return (
                   <div
                     key={block.id}
@@ -364,9 +351,11 @@ export function AvailabilityManager({ initialWindows }: AvailabilityManagerProps
                       <Clock className="w-4 h-4 text-rose-500" />
                       <div>
                         <span className="font-['Krona_One',sans-serif] text-xs text-slate-800 mr-2">
-                          {timeLabel}
+                          {block.formattedTime}
                         </span>
-                        <span className="text-xs text-slate-500 font-medium">({dateLabel})</span>
+                        <span className="text-xs text-slate-500 font-medium capitalize">
+                          ({block.formattedDate})
+                        </span>
                         <span className="text-xs text-slate-700 ml-2 font-semibold">
                           &bull; {block.reason || "Bloqueo administrativo"}
                         </span>

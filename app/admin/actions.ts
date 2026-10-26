@@ -20,6 +20,8 @@ export interface AdminAppointmentDto {
   startAt: string;
   endAt: string;
   createdAt: string;
+  formattedTime: string;
+  formattedDate: string;
 }
 
 export interface AdminAvailabilityWindowDto {
@@ -28,6 +30,8 @@ export interface AdminAvailabilityWindowDto {
   endAt: string;
   isBlocked: boolean;
   reason: string | null;
+  formattedTime: string;
+  formattedDate: string;
 }
 
 /**
@@ -103,6 +107,20 @@ export async function getAdminAppointmentsAction(dateFilterIso?: string): Promis
       .orderBy(desc(appointments.startAt))
       .limit(100);
 
+    const timeFmt = new Intl.DateTimeFormat("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+    const dateFmt = new Intl.DateTimeFormat("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+
     const list: AdminAppointmentDto[] = rows.map((r) => ({
       id: r.id,
       customerName: r.customerName,
@@ -116,6 +134,8 @@ export async function getAdminAppointmentsAction(dateFilterIso?: string): Promis
       startAt: r.startAt.toISOString(),
       endAt: r.endAt.toISOString(),
       createdAt: r.createdAt.toISOString(),
+      formattedTime: timeFmt.format(r.startAt),
+      formattedDate: dateFmt.format(r.startAt),
     }));
 
     return { success: true, appointments: list };
@@ -236,6 +256,20 @@ export async function getAdminWindowsAction(): Promise<{
       .orderBy(desc(availabilityWindows.startAt))
       .limit(50);
 
+    const timeFmt = new Intl.DateTimeFormat("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+    const dateFmt = new Intl.DateTimeFormat("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+
     return {
       success: true,
       windows: rows.map((w) => ({
@@ -244,6 +278,8 @@ export async function getAdminWindowsAction(): Promise<{
         endAt: w.endAt.toISOString(),
         isBlocked: w.isBlocked,
         reason: w.reason,
+        formattedTime: `${timeFmt.format(w.startAt)} - ${timeFmt.format(w.endAt)}`,
+        formattedDate: dateFmt.format(w.startAt),
       })),
     };
   } catch (error) {

@@ -39,20 +39,16 @@ export function AppointmentsList({ initialAppointments }: { initialAppointments:
         </div>
       ) : (
         appointments.map((appt) => {
-          const date = new Date(appt.startAt);
-          const time = date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
-          const dateStr = date.toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" });
-
           return (
             <div key={appt.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               {/* Horario y Servicio */}
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
                   <span className="font-['Krona_One',sans-serif] text-sm text-slate-900">
-                    {time} hs
+                    {appt.formattedTime} hs
                   </span>
-                  <span className="text-xs text-slate-500 font-medium">
-                    {dateStr}
+                  <span className="text-xs text-slate-500 font-medium capitalize">
+                    {appt.formattedDate}
                   </span>
 
                   {/* ZERO-BADGE POLICY: Estado tipográfico puro sin componentes Badge */}
