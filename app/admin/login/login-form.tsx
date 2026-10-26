@@ -2,10 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { loginAdminAction } from "../actions";
 
 export function AdminLoginForm() {
@@ -31,61 +27,62 @@ export function AdminLoginForm() {
   }
 
   return (
-    <Card className="border-zinc-800 bg-zinc-900/90 backdrop-blur-md text-zinc-100 shadow-2xl">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">Ingreso de Administrador</CardTitle>
-        <CardDescription className="text-zinc-400">
-          Accedé al panel de control de citas, horarios y bloqueos de agenda.
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="p-3 text-sm rounded-lg bg-red-500/10 border border-red-500/30 text-red-300">
-              {error}
-            </div>
-          )}
+    <div className="rounded-[2rem] bg-white/60 backdrop-blur-2xl border border-white/80 shadow-[0_12px_40px_0_rgba(169,119,60,0.08)] p-8 space-y-6">
+      <div className="space-y-1">
+        <h2 className="font-['Krona_One',sans-serif] text-lg text-slate-900 font-normal uppercase tracking-tight">
+          Ingreso de Barbero
+        </h2>
+        <p className="text-xs text-slate-500 font-normal">
+          Accedé al panel para consultar citas, horarios y servicios.
+        </p>
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-zinc-300">
-              Email Profesional
-            </Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              defaultValue="admin@rove.com"
-              placeholder="barbero@rove.com"
-              className="bg-zinc-950/60 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-amber-400"
-            />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 text-xs rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-medium">
+            {error}
           </div>
+        )}
 
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-zinc-300">
-              Contraseña
-            </Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              placeholder="••••••••"
-              className="bg-zinc-950/60 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-amber-400"
-            />
-          </div>
-        </CardContent>
+        <div className="space-y-1.5">
+          <label htmlFor="email" className="block text-[10px] font-bold uppercase tracking-wider text-slate-600">
+            Email Profesional
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            defaultValue="admin@rove.com"
+            placeholder="admin@rove.com"
+            className="w-full bg-white/90 border border-amber-900/10 focus:border-[#a9773c]/50 focus:ring-2 focus:ring-[#a9773c]/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-800 transition-all outline-none"
+          />
+        </div>
 
-        <CardFooter className="pt-2">
-          <Button
+        <div className="space-y-1.5">
+          <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-wider text-slate-600">
+            Contraseña
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            defaultValue="rove2026"
+            className="w-full bg-white/90 border border-amber-900/10 focus:border-[#a9773c]/50 focus:ring-2 focus:ring-[#a9773c]/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-800 transition-all outline-none"
+          />
+        </div>
+
+        <div className="pt-2">
+          <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold transition-all"
+            className="w-full rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase py-3.5 shadow-md shadow-[#a9773c]/35 hover:scale-[1.01] active:scale-95 transition-all duration-200 disabled:opacity-50"
           >
-            {loading ? "Verificando..." : "Entrar al Panel"}
-          </Button>
-        </CardFooter>
+            {loading ? "Accediendo..." : "Entrar al Panel"}
+          </button>
+        </div>
       </form>
-    </Card>
+    </div>
   );
 }

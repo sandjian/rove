@@ -285,3 +285,159 @@ export async function createManualBlockAction(input: {
     return { success: false, error: msg };
   }
 }
+
+/**
+ * Elimina un bloqueo manual existente.
+ */
+export async function deleteManualBlockAction(blockId: string): Promise<{ success: boolean; error?: string }> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, error: "No autorizado." };
+
+  try {
+    await db.delete(availabilityWindows).where(eq(availabilityWindows.id, blockId));
+    revalidatePath("/admin");
+    revalidatePath("/admin/agenda");
+    return { success: true };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Error al eliminar bloqueo";
+    return { success: false, error: msg };
+  }
+}
+
+export interface AdminKpiData {
+  todayAppointmentsCount: number;
+  todayProjectedRevenue: number;
+  weeklyOccupancyRate: number;
+  recentUnseenCount: number;
+}
+
+export interface ServiceItemDto {
+  id: string;
+  name: string;
+  description: string | null;
+  priceAmount: number;
+  durationMinutes: number;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+/**
+ * Obtiene métricas y KPIs del Dashboard principal.
+ */
+export async function getAdminKpisAction(): Promise<{ success: boolean; kpis?: AdminKpiData; error?: string }> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, error: "No autorizado." };
+
+  try {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const todayRows = await db
+      .select()
+      .from(appointments)
+      .where(and(gte(appointments.startAt, startOfToday), lte(appointments.startAt, endOfToday)));
+
+    const activeToday = todayRows.filter((a) => a.status !== "cancelled");
+    const todayRevenue = activeToday.reduce((acc, a) => acc + (a.servicePriceSnapshot || 0), 0);
+
+    const recentRows = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(appointments)
+      .where(gte(appointments.createdAt, last24Hours));
+    const recentUnseenCount = Number(recentRows[0]?.count || 0);
+
+    const startOfWeek = new Date(now);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const weekRows = await db
+      .select()
+      .from(appointments)
+      .where(and(gte(appointments.startAt, startOfWeek), lte(appointments.startAt, endOfWeek)));
+    const activeWeek = weekRows.filter((a) => a.status !== "cancelled");
+    const totalMinutesBooked = activeWeek.reduce((acc, a) => acc + (a.serviceDurationSnapshot || 45), 0);
+    const totalWeeklyCapacityMinutes = 6 * 8 * 60;
+    const occupancyRate = Math.min(100, Math.round((totalMinutesBooked / totalWeeklyCapacityMinutes) * 100));
+
+    return {
+      success: true,
+      kpis: {
+        todayAppointmentsCount: activeToday.length,
+        todayProjectedRevenue: todayRevenue,
+        weeklyOccupancyRate: occupancyRate,
+        recentUnseenCount,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Error calculando métricas" };
+  }
+}
+
+/**
+ * Obtiene el catálogo completo de servicios para el editor.
+ */
+export async function getAdminServicesAction(): Promise<{ success: boolean; services: ServiceItemDto[]; error?: string }> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, services: [], error: "No autorizado." };
+
+  try {
+    const rows = await db.select().from(services).orderBy(services.sortOrder);
+    return {
+      success: true,
+      services: rows.map((s) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        priceAmount: s.priceAmount,
+        durationMinutes: s.durationMinutes,
+        isActive: s.isActive,
+        sortOrder: s.sortOrder,
+      })),
+    };
+  } catch (error) {
+    return { success: false, services: [], error: error instanceof Error ? error.message : "Error al obtener servicios" };
+  }
+}
+
+/**
+ * Actualiza los atributos de un servicio en la base de datos y revalida vistas.
+ */
+export async function updateServiceAction(input: {
+  id: string;
+  name: string;
+  priceAmount: number;
+  durationMinutes: number;
+  isActive: boolean;
+}): Promise<{ success: boolean; error?: string }> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, error: "No autorizado." };
+
+  try {
+    await db
+      .update(services)
+      .set({
+        name: input.name,
+        priceAmount: input.priceAmount,
+        durationMinutes: input.durationMinutes,
+        isActive: input.isActive,
+        updatedAt: sql`clock_timestamp()`,
+      })
+      .where(eq(services.id, input.id));
+
+    revalidatePath("/admin/servicios");
+    revalidatePath("/admin");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Error al actualizar servicio" };
+  }
+}
+
