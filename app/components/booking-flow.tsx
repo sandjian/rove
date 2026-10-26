@@ -16,6 +16,26 @@ interface BookingFlowProps {
   initialServices?: ServiceDto[];
 }
 
+// Mapeo de imágenes y badges acordes a cada servicio para las tarjetas alargadas
+const SERVICE_IMAGES: Record<string, { image: string; tag: string }> = {
+  "corte-clasico": {
+    image: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=800&q=80",
+    tag: "Técnica Milimétrica",
+  },
+  "perfilado-barba": {
+    image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=800&q=80",
+    tag: "Ritual & Navaja",
+  },
+  "combo-rove": {
+    image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
+    tag: "Firma Rove",
+  },
+  "corte-infantil": {
+    image: "https://images.unsplash.com/photo-1517832606589-7629c3395909?auto=format&fit=crop&w=800&q=80",
+    tag: "Paciencia & Estilo",
+  },
+};
+
 export function BookingFlow({ initialServices }: BookingFlowProps) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
@@ -129,9 +149,9 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
   const activeDay = days.find((d) => d.dateKey === selectedDayKey);
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-3xl bg-white/70 border border-white/80 shadow-[0_8px_32px_0_rgba(31,38,135,0.06)] backdrop-blur-2xl p-6 sm:p-10 text-slate-800 transition-all">
+    <div className="w-full text-slate-800 transition-all">
       {/* Indicador de pasos */}
-      <div className="flex items-center justify-between border-b border-slate-200/70 pb-6 mb-8">
+      <div className="flex items-center justify-between border-b border-amber-900/10 pb-6 mb-8">
         <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm font-medium">
           <button
             type="button"
@@ -139,7 +159,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             disabled={step === 4}
             className={`flex items-center gap-2 transition-all ${
               step === 1
-                ? "text-blue-600 font-bold"
+                ? "text-[#a9773c] font-bold"
                 : step > 1
                 ? "text-slate-600 hover:text-slate-900"
                 : "text-slate-400 cursor-not-allowed"
@@ -148,9 +168,9 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
                 step === 1
-                  ? "bg-gradient-to-r from-blue-500 to-sky-400 text-white shadow-md shadow-blue-500/20"
+                  ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
                   : step > 1
-                  ? "bg-blue-50 text-blue-600 border border-blue-200/60"
+                  ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
               }`}
             >
@@ -167,7 +187,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             disabled={!selectedService || step === 4}
             className={`flex items-center gap-2 transition-all ${
               step === 2
-                ? "text-blue-600 font-bold"
+                ? "text-[#a9773c] font-bold"
                 : step > 2
                 ? "text-slate-600 hover:text-slate-900"
                 : "text-slate-400 cursor-not-allowed"
@@ -176,9 +196,9 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
                 step === 2
-                  ? "bg-gradient-to-r from-blue-500 to-sky-400 text-white shadow-md shadow-blue-500/20"
+                  ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
                   : step > 2
-                  ? "bg-blue-50 text-blue-600 border border-blue-200/60"
+                  ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
               }`}
             >
@@ -195,7 +215,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             disabled={!selectedSlot || step === 4}
             className={`flex items-center gap-2 transition-all ${
               step === 3
-                ? "text-blue-600 font-bold"
+                ? "text-[#a9773c] font-bold"
                 : step > 3
                 ? "text-slate-600 hover:text-slate-900"
                 : "text-slate-400 cursor-not-allowed"
@@ -204,9 +224,9 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
                 step === 3
-                  ? "bg-gradient-to-r from-blue-500 to-sky-400 text-white shadow-md shadow-blue-500/20"
+                  ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
                   : step > 3
-                  ? "bg-blue-50 text-blue-600 border border-blue-200/60"
+                  ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
               }`}
             >
@@ -217,30 +237,32 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
         </div>
 
         {selectedService && step < 4 && (
-          <div className="hidden md:flex items-center gap-2 text-xs text-slate-600 bg-white/80 px-3.5 py-1.5 rounded-full border border-slate-200/70 shadow-sm">
+          <div className="hidden md:flex items-center gap-2 text-xs text-slate-600 bg-white/85 px-3.5 py-1.5 rounded-full border border-amber-900/10 shadow-sm">
             <span className="font-semibold text-slate-800">{selectedService.name}</span>
             <span className="text-slate-300">•</span>
-            <span className="text-blue-600 font-bold">
+            <span className="text-[#a9773c] font-bold">
               ${selectedService.priceAmount.toLocaleString("es-AR")} ARS
             </span>
           </div>
         )}
       </div>
 
-      {/* PASO 1: SELECCIONAR SERVICIO */}
+      {/* PASO 1: SELECCIONAR SERVICIO EN 4 COLUMNAS CON TARJETAS ALARGADAS CON FONDO DE IMAGEN */}
       {step === 1 && (
         <div className="space-y-6">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Elegí tu Servicio</h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Todos los turnos son individuales con atención exclusiva de autor.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Elegí tu Servicio</h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Atención individual de autor con turnos reservados exclusivamente para vos.
+              </p>
+            </div>
           </div>
 
           {loadingServices ? (
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 rounded-2xl bg-white/40 animate-pulse border border-slate-200/50" />
+                <div key={i} className="h-80 rounded-[1.8rem] bg-white/40 animate-pulse border border-slate-200/60" />
               ))}
             </div>
           ) : services.length === 0 ? (
@@ -248,42 +270,70 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
               <p className="text-slate-500 text-sm">No hay servicios disponibles en este momento.</p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {services.map((service) => {
                 const isSelected = selectedService?.id === service.id;
+                const meta = SERVICE_IMAGES[service.id] ?? {
+                  image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
+                  tag: "Autor",
+                };
+
                 return (
                   <button
                     key={service.id}
                     type="button"
                     onClick={() => handleSelectService(service)}
-                    className={`group text-left p-6 rounded-2xl border transition-all duration-200 flex flex-col justify-between shadow-sm hover:shadow-md ${
+                    className={`group relative text-left rounded-[1.8rem] overflow-hidden border transition-all duration-300 flex flex-col justify-between min-h-[340px] sm:min-h-[380px] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 ${
                       isSelected
-                        ? "bg-blue-50/70 border-blue-400 ring-2 ring-blue-300/40"
-                        : "bg-white/80 border-slate-200/70 hover:bg-white hover:border-blue-300"
+                        ? "border-[#a9773c] ring-2 ring-[#a9773c]/50 shadow-[0_12px_32px_rgba(169,119,60,0.2)]"
+                        : "border-white/80 hover:border-[#a9773c]/40 bg-white/50"
                     }`}
                   >
-                    <div>
-                      <div className="flex items-start justify-between gap-3">
-                        <h3 className="font-semibold text-base sm:text-lg text-slate-900 group-hover:text-blue-600 transition-colors">
-                          {service.name}
-                        </h3>
-                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 whitespace-nowrap border border-slate-200/70">
-                          {service.durationMinutes} min
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed">
-                        {service.description}
-                      </p>
+                    {/* Fondo fotográfico con gradiente oscurecedor superior/inferior para legibilidad perfecta */}
+                    <div className="absolute inset-0 z-0 overflow-hidden">
+                      <img
+                        src={meta.image}
+                        alt={service.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter brightness-[0.72] contrast-[1.08]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/30" />
+                      <div className="absolute inset-0 bg-[#a9773c]/15 mix-blend-overlay" />
                     </div>
 
-                    <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-lg font-bold text-slate-900">
-                        ${service.priceAmount.toLocaleString("es-AR")}{" "}
-                        <span className="text-xs font-normal text-slate-500">ARS</span>
+                    {/* Contenido Superior: Tag y Duración */}
+                    <div className="relative z-10 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 text-amber-200 backdrop-blur-md border border-white/20">
+                        {meta.tag}
                       </span>
-                      <span className="text-xs font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                        Seleccionar &rarr;
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/20 text-white backdrop-blur-md border border-white/30 whitespace-nowrap">
+                        {service.durationMinutes} min
                       </span>
+                    </div>
+
+                    {/* Contenido Inferior: Nombre, Descripción breve y Precio */}
+                    <div className="relative z-10 space-y-3 pt-12">
+                      <div>
+                        <h3 className="font-['Krona_One',sans-serif] text-base sm:text-lg font-normal text-white group-hover:text-amber-300 transition-colors leading-snug">
+                          {service.name}
+                        </h3>
+                        <p className="text-xs text-slate-300 mt-1.5 line-clamp-2 leading-relaxed">
+                          {service.description}
+                        </p>
+                      </div>
+
+                      <div className="pt-3 border-t border-white/15 flex items-center justify-between">
+                        <div>
+                          <div className="text-[10px] uppercase font-semibold text-slate-400">Precio</div>
+                          <div className="text-lg font-bold text-white">
+                            ${service.priceAmount.toLocaleString("es-AR")}{" "}
+                            <span className="text-[11px] font-normal text-slate-300">ARS</span>
+                          </div>
+                        </div>
+
+                        <span className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#a9773c] to-[#c49257] group-hover:from-[#c49257] group-hover:to-[#a9773c] text-white text-[11px] font-bold shadow-md shadow-black/30 flex items-center gap-1 group-hover:scale-105 transition-all">
+                          Elegir &rarr;
+                        </span>
+                      </div>
                     </div>
                   </button>
                 );
@@ -306,7 +356,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 underline underline-offset-2"
+              className="text-xs font-medium text-[#a9773c] hover:text-[#8d5e2a] underline underline-offset-2"
             >
               Cambiar servicio
             </button>
@@ -314,7 +364,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
 
           {loadingSlots ? (
             <div className="py-16 text-center space-y-3">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="w-8 h-8 border-2 border-[#a9773c] border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-xs sm:text-sm text-slate-500">Calculando horarios disponibles en tiempo real...</p>
             </div>
           ) : days.length === 0 ? (
@@ -326,7 +376,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-2"
+                className="mt-2 text-xs font-semibold text-[#a9773c] hover:text-[#8d5e2a] underline underline-offset-2"
               >
                 Volver al catálogo de servicios
               </button>
@@ -348,8 +398,8 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                         onClick={() => setSelectedDayKey(day.dateKey)}
                         className={`p-3 rounded-2xl border text-center transition-all duration-150 ${
                           isDaySelected
-                            ? "bg-gradient-to-r from-blue-500 via-sky-400 to-blue-400 text-white font-bold border-transparent shadow-md shadow-blue-400/25"
-                            : "bg-white/80 border-slate-200/70 text-slate-700 hover:bg-white hover:border-blue-200 shadow-sm"
+                            ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-bold border-transparent shadow-md shadow-[#a9773c]/30"
+                            : "bg-white/80 border-slate-200/70 text-slate-700 hover:bg-white hover:border-[#a9773c]/30 shadow-sm"
                         }`}
                       >
                         <div className={`text-[11px] uppercase tracking-wide font-medium ${isDaySelected ? "text-white/90" : "text-slate-400"}`}>
@@ -383,8 +433,8 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                           onClick={() => handleSelectSlot(slot)}
                           className={`py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all ${
                             isSlotSelected
-                              ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/25"
-                              : "bg-white/90 border-slate-200/80 text-slate-800 hover:border-blue-400 hover:text-blue-600 shadow-sm hover:bg-white"
+                              ? "bg-gradient-to-r from-[#a9773c] to-[#c49257] text-white border-transparent shadow-md shadow-[#a9773c]/25"
+                              : "bg-white/90 border-slate-200/80 text-slate-800 hover:border-[#a9773c] hover:text-[#a9773c] shadow-sm hover:bg-white"
                           }`}
                         >
                           {slot.timeLabel}
@@ -410,7 +460,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
           </div>
 
           {/* Resumen del turno seleccionado */}
-          <div className="p-5 rounded-2xl bg-blue-50/50 border border-blue-100/80 grid sm:grid-cols-3 gap-4">
+          <div className="p-5 rounded-2xl bg-[#a9773c]/10 border border-[#a9773c]/20 grid sm:grid-cols-3 gap-4">
             <div>
               <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block">Servicio</span>
               <span className="font-bold text-slate-900 text-sm">{selectedService.name}</span>
@@ -418,7 +468,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             </div>
             <div>
               <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block">Fecha y Hora</span>
-              <span className="font-bold text-blue-600 text-sm">
+              <span className="font-bold text-[#a9773c] text-sm">
                 {selectedSlot.dayLabel} a las {selectedSlot.timeLabel} hs
               </span>
               <span className="text-xs text-slate-500 block">Hora local de Argentina</span>
@@ -436,7 +486,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
           <div className="space-y-4">
             <div>
               <label htmlFor="customerName" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                Nombre y Apellido <span className="text-blue-500">*</span>
+                Nombre y Apellido <span className="text-[#a9773c]">*</span>
               </label>
               <input
                 id="customerName"
@@ -446,14 +496,14 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="ej. Agustín Rossi"
-                className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/20 text-sm shadow-sm transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#a9773c] focus:ring-2 focus:ring-[#a9773c]/20 text-sm shadow-sm transition-all"
               />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="customerEmail" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Correo Electrónico <span className="text-blue-500">*</span>
+                  Correo Electrónico <span className="text-[#a9773c]">*</span>
                 </label>
                 <input
                   id="customerEmail"
@@ -463,14 +513,14 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
                   placeholder="ej. agustin@gmail.com"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/20 text-sm shadow-sm transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#a9773c] focus:ring-2 focus:ring-[#a9773c]/20 text-sm shadow-sm transition-all"
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">Recibirás la confirmación de tu turno aquí.</span>
               </div>
 
               <div>
                 <label htmlFor="customerPhone" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Teléfono / WhatsApp <span className="text-blue-500">*</span>
+                  Teléfono / WhatsApp <span className="text-[#a9773c]">*</span>
                 </label>
                 <input
                   id="customerPhone"
@@ -480,7 +530,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="ej. +54 9 11 4455-6677"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/20 text-sm shadow-sm transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#a9773c] focus:ring-2 focus:ring-[#a9773c]/20 text-sm shadow-sm transition-all"
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">Para avisos sobre tu turno.</span>
               </div>
@@ -507,7 +557,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             <button
               type="submit"
               disabled={isPending}
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 via-sky-400 to-blue-400 hover:opacity-95 text-white font-bold text-xs sm:text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_20px_-4px_rgba(59,130,246,0.4)]"
+              className="px-7 py-3 rounded-full bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] hover:opacity-95 text-white font-bold text-xs sm:text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_24px_-4px_rgba(169,119,60,0.45)] hover:shadow-[0_12px_28px_-4px_rgba(169,119,60,0.6)] hover:scale-[1.02]"
             >
               {isPending ? (
                 <>
@@ -545,7 +595,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
 
             <div className="flex justify-between items-center pb-3 border-b border-slate-100">
               <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">Fecha y Hora</span>
-              <span className="text-sm font-bold text-blue-600">
+              <span className="text-sm font-bold text-[#a9773c]">
                 {selectedSlot?.dayLabel} a las {selectedSlot?.timeLabel} hs
               </span>
             </div>
@@ -563,7 +613,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             </div>
           </div>
 
-          <div className="max-w-md mx-auto text-xs text-slate-600 space-y-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100/70">
+          <div className="max-w-md mx-auto text-xs text-slate-600 space-y-2 bg-amber-50/50 p-4 rounded-xl border border-amber-200/60">
             <p>
               📧 Se ha emitido un correo de confirmación a <strong className="text-slate-900 font-semibold">{confirmedBooking.customerEmail}</strong>.
             </p>
@@ -575,7 +625,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                 href={`/cancelar/${cancellationToken}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block text-blue-600 hover:text-blue-700 underline font-mono text-[11px] break-all pt-1 font-semibold"
+                className="inline-block text-[#a9773c] hover:text-[#8d5e2a] underline font-mono text-[11px] break-all pt-1 font-semibold"
               >
                 Ver enlace de cancelación
               </Link>

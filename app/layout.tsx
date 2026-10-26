@@ -51,7 +51,7 @@ export default function RootLayout({
       lang="es"
       className={`${inter.variable} ${spaceGrotesk.variable} ${kronaOne.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans selection:bg-blue-100 selection:text-slate-900">
+      <body className="min-h-full flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
         {children}
       </body>
     </html>
