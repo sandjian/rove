@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 const COOKIE_NAME = "rove_admin_session";
 const ALGORITHM = "aes-256-gcm";
@@ -88,6 +89,7 @@ export async function setAdminSessionCookie(session: AdminSession) {
  * Obtiene la sesión actual de la cookie o null si no está autenticado.
  */
 export async function getAdminSession(): Promise<AdminSession | null> {
+  await connection();
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
