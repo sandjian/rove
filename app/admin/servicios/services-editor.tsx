@@ -120,7 +120,7 @@ export function ServicesEditor({ initialServices }: ServicesEditorProps) {
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 {/* Columna Izquierda: Identificador & Nombre */}
                 <div className="flex-1 flex items-center gap-3.5">
-                  <span className="font-['Krona_One',sans-serif] text-xs text-slate-400 select-none">
+                  <span className="font-sans font-bold text-xs text-slate-400 select-none">
                     0{index + 1}
                   </span>
 
@@ -178,7 +178,7 @@ export function ServicesEditor({ initialServices }: ServicesEditorProps) {
                         onChange={(e) =>
                           handleFieldChange(service.id, "priceAmount", parseInt(e.target.value) || 0)
                         }
-                        className="w-full bg-white/80 border border-amber-900/10 focus:border-[#a9773c]/50 focus:ring-2 focus:ring-[#a9773c]/10 rounded-xl pl-7 pr-3 py-2 text-sm font-['Krona_One',sans-serif] text-slate-900 transition-all outline-none"
+                        className="w-full bg-white/80 border border-amber-900/10 focus:border-[#a9773c]/50 focus:ring-2 focus:ring-[#a9773c]/10 rounded-xl pl-7 pr-3 py-2 text-sm font-sans font-bold text-slate-900 transition-all outline-none"
                       />
                     </div>
                   </div>

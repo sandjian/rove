@@ -42,7 +42,7 @@ export default async function AdminDashboardPage() {
             <Clock className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-['Krona_One',sans-serif] text-3xl font-normal text-slate-900 tracking-tight">
+            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
               {kpis.todayAppointmentsCount}
             </div>
             <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
@@ -60,7 +60,7 @@ export default async function AdminDashboardPage() {
             <TrendingUp className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-['Krona_One',sans-serif] text-3xl font-normal text-slate-900 tracking-tight">
+            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
               ${kpis.todayProjectedRevenue.toLocaleString("es-AR")}
             </div>
             <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
@@ -78,7 +78,7 @@ export default async function AdminDashboardPage() {
             <CalendarCheck className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-['Krona_One',sans-serif] text-3xl font-normal text-slate-900 tracking-tight">
+            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
               {kpis.weeklyOccupancyRate}%
             </div>
             <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">

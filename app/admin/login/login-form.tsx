@@ -29,7 +29,7 @@ export function AdminLoginForm() {
   return (
     <div className="rounded-[2rem] bg-white/60 backdrop-blur-2xl border border-white/80 shadow-[0_12px_40px_0_rgba(169,119,60,0.08)] p-8 space-y-6">
       <div className="space-y-1">
-        <h2 className="font-['Krona_One',sans-serif] text-lg text-slate-900 font-normal uppercase tracking-tight">
+        <h2 className="font-sans font-bold text-lg text-slate-900 uppercase tracking-tight">
           Ingreso de Barbero
         </h2>
         <p className="text-xs text-slate-500 font-normal">

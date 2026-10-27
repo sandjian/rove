@@ -199,7 +199,7 @@ export function AvailabilityManager({ initialWindows }: AvailabilityManagerProps
                 </button>
 
                 <div>
-                  <span className="font-['Krona_One',sans-serif] text-xs text-slate-900 block">
+                  <span className="font-sans font-bold text-xs text-slate-900 block">
                     {day.label}
                   </span>
                   {/* ZERO-BADGE POLICY: Estado tipográfico puro */}
@@ -350,7 +350,7 @@ export function AvailabilityManager({ initialWindows }: AvailabilityManagerProps
                     <div className="flex items-center gap-3">
                       <Clock className="w-4 h-4 text-rose-500" />
                       <div>
-                        <span className="font-['Krona_One',sans-serif] text-xs text-slate-800 mr-2">
+                        <span className="font-sans font-bold text-xs text-slate-800 mr-2">
                           {block.formattedTime}
                         </span>
                         <span className="text-xs text-slate-500 font-medium capitalize">

@@ -44,7 +44,7 @@ export function AppointmentsList({ initialAppointments }: { initialAppointments:
               {/* Horario y Servicio */}
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <span className="font-['Krona_One',sans-serif] text-sm text-slate-900">
+                  <span className="font-sans font-bold text-sm text-slate-900">
                     {appt.formattedTime} hs
                   </span>
                   <span className="text-xs text-slate-500 font-medium capitalize">

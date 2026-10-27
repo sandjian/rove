@@ -25,7 +25,7 @@ export default async function AdminLoginPage() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30 font-bold text-lg mb-2">
             R
           </div>
-          <h1 className="font-['Krona_One',sans-serif] text-2xl font-normal text-slate-900 uppercase tracking-tight">
+          <h1 className="font-sans font-bold text-2xl uppercase text-slate-900 tracking-tight">
             ROVE ADMIN
           </h1>
           <p className="text-xs uppercase tracking-[0.25em] text-[#a9773c] font-semibold">

@@ -88,7 +88,7 @@ export default function HomePage() {
       >
         {/* Anillo de pulso sutil */}
         <span className="absolute -inset-1 rounded-full bg-[#25D366] opacity-35 animate-ping pointer-events-none" />
-        
+
         {/* SVG Oficial del Logo de WhatsApp */}
         <svg
           className="w-7 h-7 fill-current relative z-10 drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
@@ -114,7 +114,7 @@ export default function HomePage() {
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] flex items-center justify-center text-white shadow-sm shadow-[#a9773c]/40 font-bold text-xs group-hover:scale-105 transition-transform">
                 R
               </div>
-              <span className="font-['Krona_One',sans-serif] text-sm sm:text-base font-normal tracking-[0.2em] text-slate-900 uppercase">
+              <span className="font-sans font-bold text-sm sm:text-base tracking-[0.2em] text-slate-900 uppercase">
                 ROVE GLASS
               </span>
             </Link>
@@ -139,7 +139,7 @@ export default function HomePage() {
             <div className="lg:col-span-7 space-y-6 sm:space-y-8">
               <MotionFade delay={0.1}>
                 {/* Título estilo 3D cromo/cristal de NOVA GLASS */}
-                <h1 className="font-['Krona_One',sans-serif] text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-[0.04em] uppercase leading-[0.95] select-none text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-700 to-slate-400 drop-shadow-[0_4px_12px_rgba(255,255,255,0.9)]">
+                <h1 className="font-sans font-bold text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-[0.04em] uppercase leading-[0.95] select-none text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-700 to-slate-400 drop-shadow-[0_4px_12px_rgba(255,255,255,0.9)]">
                   ROVE <br />
                   <span className="tracking-[0.08em] bg-clip-text text-transparent bg-gradient-to-r from-slate-800 via-amber-950 to-slate-600">
                     BARBER
@@ -210,7 +210,7 @@ export default function HomePage() {
                   </div>
 
                   {/* MINI MAPA GLASSMÓRFICO DESFASADO (Oculto para pantallas menores a lg: hidden lg:block) */}
-                  <div className="hidden lg:block absolute -top-6 -left-4 sm:-top-24 sm:-left-48 z-20 w-72 sm:w-80 rounded-[1.7rem] bg-white/95 backdrop-blur-2xl border border-white shadow-[0_16px_40px_rgba(169,119,60,0.15)] p-2 space-y-3 transition-all hover:scale-[1.02] group">
+                  <div className="hidden lg:block absolute -top-6 -left-4 sm:-top-24 sm:-left-48 z-20 w-72 sm:w-80 rounded-[1.7rem] bg-white backdrop-blur-2xl border border-white shadow-[0_16px_40px_rgba(169,119,60,0.15)] p-2 space-y-3 transition-all hover:scale-[1.02] group">
                     {/* Contenedor Cartográfico de Autor estilo Uber / Mapbox Light */}
                     <div className="relative w-full h-36 rounded-2xl overflow-hidden bg-[#ededf2] border border-slate-200/80 shadow-inner select-none">
                       {/* Cuadrícula Cartográfica Vectorial 1:1 estilo Uber / Apple Maps Minimalista */}
@@ -379,7 +379,7 @@ export default function HomePage() {
                         <div className="w-8 h-8 rounded-xl bg-amber-50/90 border border-amber-200/60 flex items-center justify-center text-[#a9773c] mb-3 shadow-inner">
                           <Icon className="w-4 h-4 stroke-[1.8]" />
                         </div>
-                        <div className="font-['Krona_One',sans-serif] text-2xl sm:text-3xl font-normal text-slate-900 tracking-tight">
+                        <div className="font-sans font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
                           <AnimatedCounter value={item.numericValue} suffix={item.suffix} />
                         </div>
                         <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1.5">
@@ -438,7 +438,7 @@ export default function HomePage() {
 
                   {/* Título y descripción */}
                   <div className="space-y-2">
-                    <h3 className="font-['Krona_One',sans-serif] text-lg font-normal text-slate-900 group-hover:text-[#a9773c] transition-colors">
+                    <h3 className="font-sans font-bold text-lg text-slate-900 group-hover:text-[#a9773c] transition-colors">
                       {srv.title}
                     </h3>
                     <p className="text-xs sm:text-[13px] text-slate-600 font-normal leading-relaxed h-20">
@@ -478,7 +478,7 @@ export default function HomePage() {
           <MotionFade delay={0.2}>
             <div className="rounded-[2.2rem] sm:rounded-[2.5rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_12px_40px_0_rgba(169,119,60,0.06)] p-6 sm:p-8 lg:p-10">
               <div className="max-w-3xl mx-auto text-center space-y-2.5 mb-8">
-                <h2 className="font-['Krona_One',sans-serif] text-2xl sm:text-3xl font-normal text-slate-900 uppercase tracking-tight">
+                <h2 className="font-sans font-bold text-2xl sm:text-3xl text-slate-900 uppercase tracking-tight">
                   Seleccioná tu Turno
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600 font-normal">
@@ -501,7 +501,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 {/* IZQUIERDA: TÍTULO GRANDE Y BOTÓN PRINCIPAL */}
                 <div className="lg:col-span-6 space-y-4">
-                  <h2 className="font-['Krona_One',sans-serif] text-2xl sm:text-4xl font-normal uppercase text-slate-900 leading-[1.1] tracking-tight">
+                  <h2 className="font-sans font-bold text-2xl sm:text-4xl uppercase text-slate-900 leading-[1.1] tracking-tight">
                     RESERVÁ TU <br />
                     TURNO HOY
                   </h2>

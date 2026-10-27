@@ -22,7 +22,7 @@ export function AdminNav({ adminEmail }: { adminEmail: string }) {
           R
         </div>
         <div>
-          <span className="font-['Krona_One',sans-serif] text-sm tracking-[0.15em] text-slate-900 uppercase">
+          <span className="font-sans font-bold text-sm tracking-[0.15em] text-slate-900 uppercase">
             ROVE ADMIN
           </span>
           <span className="block text-[10px] text-slate-500 font-medium">

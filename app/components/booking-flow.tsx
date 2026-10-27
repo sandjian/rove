@@ -320,7 +320,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                     {/* Contenido Inferior: Nombre, Descripción breve y Precio */}
                     <div className="relative z-10 space-y-3 pt-12">
                       <div>
-                        <h3 className="font-['Krona_One',sans-serif] text-base sm:text-lg font-normal text-white group-hover:text-amber-300 transition-colors leading-snug">
+                        <h3 className="font-sans font-bold text-base sm:text-lg text-white group-hover:text-amber-300 transition-colors leading-snug">
                           {service.name}
                         </h3>
                         <p className="text-xs text-slate-300 mt-1.5 line-clamp-2 leading-relaxed">
