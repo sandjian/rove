@@ -18,6 +18,7 @@ import {
   Star,
   ExternalLink,
   MessageCircle,
+  Instagram,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -493,53 +494,47 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================================= */}
-        {/* 5. SECCIÓN DE EVENTOS & MATÍAS ROVE (FUNDADOR DE ROVE BARBERÍA) */}
+        {/* 5. SECCIÓN DE EVENTOS & CANALES OFICIALES (ROVE ON-DEMAND) */}
         {/* ========================================================================= */}
         <footer id="eventos" className="pt-4 pb-8 space-y-8">
           <MotionFade delay={0.2}>
-            <div className="rounded-[2.2rem] sm:rounded-[2.5rem] bg-white/55 backdrop-blur-2xl border border-white/80 shadow-[0_16px_45px_0_rgba(169,119,60,0.08)] p-8 sm:p-12 lg:p-14 relative overflow-hidden">
+            <div className="rounded-[2.2rem] sm:rounded-[2.5rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_16px_45px_0_rgba(169,119,60,0.08)] p-8 sm:p-12 lg:p-14 relative overflow-hidden">
               {/* Brillo especular superior */}
               <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-                {/* IZQUIERDA: AVATAR / PERFIL DE MATÍAS ROVE & PROPUESTA DE EVENTOS */}
+                {/* IZQUIERDA: COMUNICACIÓN CORPORATIVA & PROPUESTA ON-DEMAND */}
                 <div className="lg:col-span-7 space-y-6">
-                  {/* Encabezado con Avatar de Autor */}
+                  {/* Encabezado Corporativo con Monograma de Marca */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+                    {/* Monograma corporativo Rove sobre degradado camel */}
                     <div className="relative group shrink-0">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[1.8rem] overflow-hidden border-2 border-white shadow-lg shadow-[#a9773c]/20 bg-[#a9773c]/10">
-                        <img
-                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                          alt="Matías Rove - Fundador de Rove Barbería"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.6rem] bg-gradient-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] border-2 border-white/90 shadow-lg shadow-[#a9773c]/30 flex items-center justify-center text-white font-bold text-2xl sm:text-3xl select-none group-hover:scale-105 transition-transform duration-300">
+                        R
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-tr from-[#a9773c] to-[#c49257] border-2 border-white flex items-center justify-center text-white shadow-sm">
-                        <Scissors className="w-3.5 h-3.5" />
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-amber-100 flex items-center justify-center text-[#a9773c] shadow-xs">
+                        <Sparkles className="w-3 h-3" />
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#a9773c]/10 border border-[#a9773c]/20 text-[#a9773c] text-[10px] font-bold uppercase tracking-widest">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a9773c]/10 border border-[#a9773c]/20 text-[#a9773c] text-[10px] font-bold uppercase tracking-widest">
                         <Sparkles className="w-3 h-3" />
-                        Servicio Exclusivo para Eventos
+                        ROVE ON-DEMAND
                       </div>
-                      <h2 className="font-sans font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
-                        Hola, soy Matías Rove
+                      <h2 className="font-sans font-bold text-2xl sm:text-3xl lg:text-4xl text-slate-900 tracking-tight leading-tight">
+                        LA EXPERIENCIA ROVE EN TU EVENTO
                       </h2>
-                      <p className="text-xs sm:text-sm font-medium text-slate-500">
-                        Fundador & Master Barber en Rove Barbería
-                      </p>
                     </div>
                   </div>
 
-                  {/* Propuesta de Valor para Eventos */}
+                  {/* Propuesta de Marca */}
                   <div className="space-y-3 text-slate-600 text-xs sm:text-sm leading-relaxed">
                     <p>
-                      Llevamos la experiencia y el ritual de <strong>Rove Barbería</strong> directamente a tu evento. Diseñamos espacios de estilismo móvil, retoques en vivo y producción previa para que cada detalle refleje la máxima elegancia.
+                      Llevamos el ritual y la estética de <strong>Rove Barbería</strong> directamente a tu evento. Diseño de espacios móviles, barberos de primer nivel y atención personalizada para que cada detalle refleje la máxima elegancia.
                     </p>
                     <p className="text-slate-500">
-                      Especialmente pensado para <strong>casamientos, fiestas de egresados, celebraciones corporativas y producciones audiovisuales</strong>. Atención personalizada para grupos o stands de barbería en vivo.
+                      Servicio integral orientado a <strong>casamientos, fiestas de egresados, celebraciones corporativas y producciones audiovisuales</strong>. Montaje in-situ con estándares de barbería de autor.
                     </p>
                   </div>
 
@@ -559,39 +554,41 @@ export default function HomePage() {
                     </span>
                   </div>
 
-                  {/* Botón de Contacto por WhatsApp para Eventos */}
+                  {/* Botón CTA Corporativo */}
                   <div className="pt-2">
                     <a
-                      href="https://wa.me/5491148920091?text=Hola%20Matías,%20te%20escribo%20para%20consultar%20por%20el%20servicio%20de%20barbería%20para%20un%20evento"
+                      href="https://wa.me/5491148920091?text=Hola%20Rove%20Barbería,%20nos%20gustaría%20cotizar%20un%20servicio%20para%20un%20evento"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs uppercase tracking-wider px-8 py-4.5 h-auto transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_12px_28px_-6px_rgba(169,119,60,0.45)] hover:shadow-[0_18px_36px_-6px_rgba(169,119,60,0.6)] inline-flex items-center gap-2 border border-white/40"
                     >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>Coordinar Evento con Matías</span>
+                      <Scissors className="w-4 h-4 stroke-[1.8]" />
+                      <span>Cotizar Evento</span>
                       <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
                     </a>
                   </div>
                 </div>
 
-                {/* DERECHA: DATOS DE CONTACTO & ATENCIÓN AL CLIENTE */}
+                {/* DERECHA: CANALES OFICIALES */}
                 <div className="lg:col-span-5 space-y-5 text-xs text-slate-600 border-t lg:border-t-0 lg:border-l border-amber-900/10 pt-6 lg:pt-0 lg:pl-10">
                   <div>
                     <div className="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-1">
                       Canales Oficiales
                     </div>
                     <p className="text-slate-500 text-[11px]">
-                      Comunicate directamente para consultas personalizadas o presupuestos de eventos.
+                      Atención exclusiva y consultas para servicios corporativos y privados.
                     </p>
                   </div>
 
+                  {/* Lista en orden estricto: WhatsApp, Instagram, Correo Electrónico, Salón Principal */}
                   <div className="space-y-3.5">
+                    {/* 1. WhatsApp */}
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-white border border-emerald-100 shadow-sm flex items-center justify-center text-emerald-600 shrink-0">
-                        <MessageCircle className="w-4 h-4" />
+                      <div className="w-9 h-9 rounded-xl bg-white border border-amber-100 shadow-xs flex items-center justify-center text-[#a9773c] shrink-0">
+                        <MessageCircle className="w-4 h-4 stroke-[1.8]" />
                       </div>
                       <div>
-                        <div className="text-[10px] uppercase font-semibold text-slate-400">WhatsApp Oficial</div>
+                        <div className="text-[10px] uppercase font-semibold text-slate-400">WhatsApp</div>
                         <a
                           href="https://wa.me/5491148920091"
                           target="_blank"
@@ -603,19 +600,44 @@ export default function HomePage() {
                       </div>
                     </div>
 
+                    {/* 2. Instagram */}
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-white border border-amber-100 shadow-sm flex items-center justify-center text-[#a9773c] shrink-0">
-                        <Mail className="w-4 h-4" />
+                      <div className="w-9 h-9 rounded-xl bg-white border border-amber-100 shadow-xs flex items-center justify-center text-[#a9773c] shrink-0">
+                        <Instagram className="w-4 h-4 stroke-[1.8]" />
                       </div>
                       <div>
-                        <div className="text-[10px] uppercase font-semibold text-slate-400">Correo Electrónico</div>
-                        <span className="text-slate-800 font-semibold">contacto@rovebarberia.com</span>
+                        <div className="text-[10px] uppercase font-semibold text-slate-400">Instagram</div>
+                        <a
+                          href="https://instagram.com/rovebarberia"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-slate-800 font-semibold hover:text-[#a9773c] transition-colors"
+                        >
+                          @rovebarberia
+                        </a>
                       </div>
                     </div>
 
+                    {/* 3. Correo Electrónico */}
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-white border border-amber-100 shadow-sm flex items-center justify-center text-[#a9773c] shrink-0">
-                        <MapPin className="w-4 h-4" />
+                      <div className="w-9 h-9 rounded-xl bg-white border border-amber-100 shadow-xs flex items-center justify-center text-[#a9773c] shrink-0">
+                        <Mail className="w-4 h-4 stroke-[1.8]" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase font-semibold text-slate-400">Correo Electrónico</div>
+                        <a
+                          href="mailto:contacto@rovebarberia.com"
+                          className="text-slate-800 font-semibold hover:text-[#a9773c] transition-colors"
+                        >
+                          contacto@rovebarberia.com
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* 4. Salón Principal (Ubicación) */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-amber-100 shadow-xs flex items-center justify-center text-[#a9773c] shrink-0">
+                        <MapPin className="w-4 h-4 stroke-[1.8]" />
                       </div>
                       <div>
                         <div className="text-[10px] uppercase font-semibold text-slate-400">Salón Principal</div>
