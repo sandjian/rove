@@ -226,7 +226,7 @@ export function AppointmentsList({ initialAppointments }: { initialAppointments:
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/60 border border-white/80 shadow-xs">
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-4 h-4 text-[#a9773c]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-800 capitalize">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
                 {formattedSelectedDate}
               </span>
             </div>

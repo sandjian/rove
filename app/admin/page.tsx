@@ -44,7 +44,7 @@ export default async function AdminDashboardPage() {
             <Clock className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight flex items-baseline gap-1.5">
+            <div className="font-sans font-bold text-3xl text-slate-900 tracking-tight flex items-baseline gap-1.5">
               <span>{kpis.completedTodayCount}</span>
               <span className="text-slate-400 font-normal text-2xl">/</span>
               <span className="text-slate-600 font-semibold text-2xl">{kpis.remainingTodayCount}</span>
@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
             <CalendarCheck className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
+            <div className="font-sans font-bold text-3xl text-slate-900 tracking-tight">
               {kpis.futureAppointmentsCount}
             </div>
             <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
             <TrendingUp className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight flex items-baseline gap-2">
+            <div className="font-sans font-bold text-3xl text-slate-900 tracking-tight flex items-baseline gap-2">
               <span>{kpis.totalWeekCount}</span>
               <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">sem</span>
               <span className="text-slate-300 font-light mx-0.5">•</span>
