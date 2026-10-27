@@ -307,11 +307,8 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                       <div className="absolute inset-0  mix-blend-overlay" />
                     </div>
 
-                    {/* Contenido Superior: Tag y Duración */}
-                    <div className="relative z-10 flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 text-amber-200 backdrop-blur-md border border-white/20">
-                        {meta.tag}
-                      </span>
+                    {/* Contenido Superior: Duración exclusivamente en la esquina derecha */}
+                    <div className="relative z-10 flex items-center justify-end w-full">
                       <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/20 text-white backdrop-blur-md border border-white/30 whitespace-nowrap">
                         {service.durationMinutes} min
                       </span>

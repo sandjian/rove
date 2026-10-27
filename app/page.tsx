@@ -51,23 +51,23 @@ export default function HomePage() {
     {
       number: "01",
       title: "Corte Clásico & Fade",
-      description: "Corte a tijera o máquina con degradé artesanal milimétrico, lavado profundo y peinado con cera mate.",
+      description: "Corte a tijera o máquina con degradé artesanal milimétrico, textura precisa, lavado profundo y peinado con cera mate.",
       image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
-      tags: ["Corte Clásico", "Tijera", "Navaja"],
+      tags: ["Corte Clásico", "Skin Fade", "Tijera"],
     },
     {
       number: "02",
-      title: "Perfilado & Ritual Barba",
-      description: "Toalla caliente aromatizada, rebajado simétrico a navaja japonesa y tratamiento de aceites esenciales.",
+      title: "Perfilado & Barba",
+      description: "Ritual completo con toalla caliente aromatizada, esculpido simétrico a navaja y tratamiento nutritivo con aceites orgánicos.",
       image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=800&q=80",
-      tags: ["Barbería", "Toalla Térmica", "Ritual"],
+      tags: ["Perfilado", "Toalla Térmica", "Navaja"],
     },
     {
       number: "03",
-      title: "Experiencia Total Rove",
-      description: "El servicio insignia: corte integral, esculpido de barba, exfoliación facial calmante y bebida de cortesía.",
-      image: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80",
-      tags: ["Spa Facial", "Corte + Barba"],
+      title: "Eventos Especiales",
+      description: "Servicio exclusivo in-situ o en salón para novios, graduaciones, fiestas de egresados y producciones con estilismo integral.",
+      image: "https://images.unsplash.com/photo-1517832606589-715786d40e1b?auto=format&fit=crop&w=800&q=80",
+      tags: ["Casamientos", "Egresados", "Producciones"],
     },
   ];
 
@@ -120,15 +120,15 @@ export default function HomePage() {
             </Link>
 
             {/* Enlaces a la derecha */}
-            <nav className="flex items-center gap-6 sm:gap-8 text-xs font-semibold uppercase tracking-wider text-slate-600">
+            <nav className="flex items-center gap-5 sm:gap-7 text-xs font-semibold uppercase tracking-wider text-slate-600">
               <a href="#servicios" className="hover:text-[#a9773c] transition-colors">
                 Servicios
               </a>
               <a href="#reservar" className="hover:text-[#a9773c] transition-colors hidden md:inline-block">
                 Reservas
               </a>
-              <a href="#contacto" className="hover:text-[#a9773c] transition-colors">
-                Contacto
+              <a href="#eventos" className="hover:text-[#a9773c] transition-colors">
+                Eventos
               </a>
             </nav>
           </header>
@@ -493,69 +493,135 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================================= */}
-        {/* 5. FOOTER LIMPIO (SIN QR/GPS, PALETA CAMEL Y ELEVADO) */}
+        {/* 5. SECCIÓN DE EVENTOS & MATÍAS ROVE (FUNDADOR DE ROVE BARBERÍA) */}
         {/* ========================================================================= */}
-        <footer id="contacto" className="pt-4 pb-8 space-y-8">
+        <footer id="eventos" className="pt-4 pb-8 space-y-8">
           <MotionFade delay={0.2}>
-            <div className="rounded-[2.2rem] sm:rounded-[2.5rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_12px_40px_0_rgba(169,119,60,0.06)] p-8 sm:p-12 lg:p-14">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-                {/* IZQUIERDA: TÍTULO GRANDE Y BOTÓN PRINCIPAL */}
-                <div className="lg:col-span-6 space-y-4">
-                  <h2 className="font-sans font-bold text-2xl sm:text-4xl uppercase text-slate-900 leading-[1.1] tracking-tight">
-                    RESERVÁ TU <br />
-                    TURNO HOY
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-600 font-normal max-w-md leading-relaxed">
-                    Viví la experiencia de una barbería de autor con los más altos estándares de estilo, higiene y confort.
-                  </p>
+            <div className="rounded-[2.2rem] sm:rounded-[2.5rem] bg-white/55 backdrop-blur-2xl border border-white/80 shadow-[0_16px_45px_0_rgba(169,119,60,0.08)] p-8 sm:p-12 lg:p-14 relative overflow-hidden">
+              {/* Brillo especular superior */}
+              <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+                {/* IZQUIERDA: AVATAR / PERFIL DE MATÍAS ROVE & PROPUESTA DE EVENTOS */}
+                <div className="lg:col-span-7 space-y-6">
+                  {/* Encabezado con Avatar de Autor */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+                    <div className="relative group shrink-0">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[1.8rem] overflow-hidden border-2 border-white shadow-lg shadow-[#a9773c]/20 bg-[#a9773c]/10">
+                        <img
+                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+                          alt="Matías Rove - Fundador de Rove Barbería"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-tr from-[#a9773c] to-[#c49257] border-2 border-white flex items-center justify-center text-white shadow-sm">
+                        <Scissors className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#a9773c]/10 border border-[#a9773c]/20 text-[#a9773c] text-[10px] font-bold uppercase tracking-widest">
+                        <Sparkles className="w-3 h-3" />
+                        Servicio Exclusivo para Eventos
+                      </div>
+                      <h2 className="font-sans font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+                        Hola, soy Matías Rove
+                      </h2>
+                      <p className="text-xs sm:text-sm font-medium text-slate-500">
+                        Fundador & Master Barber en Rove Barbería
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Propuesta de Valor para Eventos */}
+                  <div className="space-y-3 text-slate-600 text-xs sm:text-sm leading-relaxed">
+                    <p>
+                      Llevamos la experiencia y el ritual de <strong>Rove Barbería</strong> directamente a tu evento. Diseñamos espacios de estilismo móvil, retoques en vivo y producción previa para que cada detalle refleje la máxima elegancia.
+                    </p>
+                    <p className="text-slate-500">
+                      Especialmente pensado para <strong>casamientos, fiestas de egresados, celebraciones corporativas y producciones audiovisuales</strong>. Atención personalizada para grupos o stands de barbería en vivo.
+                    </p>
+                  </div>
+
+                  {/* Highlights en píldoras */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className="px-3 py-1.5 rounded-xl bg-white/80 border border-amber-900/10 text-slate-700 text-[11px] font-medium shadow-xs">
+                      🎉 Fiestas de Egresados
+                    </span>
+                    <span className="px-3 py-1.5 rounded-xl bg-white/80 border border-amber-900/10 text-slate-700 text-[11px] font-medium shadow-xs">
+                      💍 Casamientos & Grooming
+                    </span>
+                    <span className="px-3 py-1.5 rounded-xl bg-white/80 border border-amber-900/10 text-slate-700 text-[11px] font-medium shadow-xs">
+                      🎬 Producciones & Shooting
+                    </span>
+                    <span className="px-3 py-1.5 rounded-xl bg-white/80 border border-amber-900/10 text-slate-700 text-[11px] font-medium shadow-xs">
+                      ✨ Barbería Móvil In-Situ
+                    </span>
+                  </div>
+
+                  {/* Botón de Contacto por WhatsApp para Eventos */}
                   <div className="pt-2">
-                    <Button
-                      size="lg"
-                      render={
-                        <a
-                          href="#reservar"
-                          className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs uppercase tracking-wider px-8 py-5 h-auto transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-[0_12px_28px_-6px_rgba(169,119,60,0.45)] hover:shadow-[0_18px_36px_-6px_rgba(169,119,60,0.6)] inline-flex items-center gap-2 border border-white/40"
-                        >
-                          <span className="relative z-10 flex items-center gap-2">
-                            Agendar Cita
-                            <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
-                          </span>
-                          <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
-                        </a>
-                      }
-                    />
+                    <a
+                      href="https://wa.me/5491148920091?text=Hola%20Matías,%20te%20escribo%20para%20consultar%20por%20el%20servicio%20de%20barbería%20para%20un%20evento"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs uppercase tracking-wider px-8 py-4.5 h-auto transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_12px_28px_-6px_rgba(169,119,60,0.45)] hover:shadow-[0_18px_36px_-6px_rgba(169,119,60,0.6)] inline-flex items-center gap-2 border border-white/40"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Coordinar Evento con Matías</span>
+                      <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
+                    </a>
                   </div>
                 </div>
 
-                {/* DERECHA: DATOS DE CONTACTO (Email, WhatsApp, Ubicación) */}
-                <div className="lg:col-span-6 space-y-4 text-xs text-slate-600 border-t lg:border-t-0 lg:border-l border-amber-900/10 pt-6 lg:pt-0 lg:pl-10">
-                  <div className="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-3">
-                    Contacto Directo
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-white border border-amber-100 shadow-sm flex items-center justify-center text-[#a9773c]">
-                      <Mail className="w-4 h-4" />
+                {/* DERECHA: DATOS DE CONTACTO & ATENCIÓN AL CLIENTE */}
+                <div className="lg:col-span-5 space-y-5 text-xs text-slate-600 border-t lg:border-t-0 lg:border-l border-amber-900/10 pt-6 lg:pt-0 lg:pl-10">
+                  <div>
+                    <div className="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-1">
+                      Canales Oficiales
                     </div>
-                    <span className="text-slate-700 font-medium">contacto@rovebarberia.com</span>
+                    <p className="text-slate-500 text-[11px]">
+                      Comunicate directamente para consultas personalizadas o presupuestos de eventos.
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-white border border-emerald-100 shadow-sm flex items-center justify-center text-emerald-600">
-                      <MessageCircle className="w-4 h-4" />
+
+                  <div className="space-y-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-emerald-100 shadow-sm flex items-center justify-center text-emerald-600 shrink-0">
+                        <MessageCircle className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase font-semibold text-slate-400">WhatsApp Oficial</div>
+                        <a
+                          href="https://wa.me/5491148920091"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-slate-800 font-semibold hover:text-[#a9773c] transition-colors"
+                        >
+                          +54 9 11 4892-0091
+                        </a>
+                      </div>
                     </div>
-                    <a
-                      href="https://wa.me/5491148920091"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-700 font-medium hover:text-[#a9773c] transition-colors"
-                    >
-                      +54 9 11 4892-0091 (WhatsApp)
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-white border border-amber-100 shadow-sm flex items-center justify-center text-[#a9773c]">
-                      <MapPin className="w-4 h-4" />
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-amber-100 shadow-sm flex items-center justify-center text-[#a9773c] shrink-0">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase font-semibold text-slate-400">Correo Electrónico</div>
+                        <span className="text-slate-800 font-semibold">contacto@rovebarberia.com</span>
+                      </div>
                     </div>
-                    <span className="text-slate-700 font-medium">San Juan 910, B7600 Mar del Plata, Buenos Aires</span>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-amber-100 shadow-sm flex items-center justify-center text-[#a9773c] shrink-0">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase font-semibold text-slate-400">Salón Principal</div>
+                        <span className="text-slate-800 font-medium">San Juan 910, B7600 Mar del Plata</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -571,11 +637,11 @@ export default function HomePage() {
               <Link href="/admin/login" className="hover:text-slate-800 transition-colors">
                 Acceso Barbero
               </Link>
-              <a href="#" className="hover:text-slate-800 transition-colors">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-slate-800 transition-colors">
                 Instagram
               </a>
-              <a href="#" className="hover:text-slate-800 transition-colors">
-                Políticas de Reserva
+              <a href="#servicios" className="hover:text-slate-800 transition-colors">
+                Servicios
               </a>
             </div>
           </div>
