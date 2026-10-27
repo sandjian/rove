@@ -15,9 +15,11 @@ export default async function AdminDashboardPage() {
   ]);
 
   const kpis = kpisRes.kpis || {
-    todayAppointmentsCount: 0,
-    todayProjectedRevenue: 0,
-    weeklyOccupancyRate: 0,
+    completedTodayCount: 0,
+    remainingTodayCount: 0,
+    futureAppointmentsCount: 0,
+    totalWeekCount: 0,
+    totalMonthCount: 0,
     recentUnseenCount: 0,
   };
 
@@ -36,56 +38,62 @@ export default async function AdminDashboardPage() {
 
       {/* PANEL DE KPIS DE IMPORTANCIA */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* KPI 1: Turnos para Hoy */}
+        {/* KPI 1: Progreso del Día (Completados / Restantes) */}
         <div className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 space-y-3">
           <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#a9773c]">
             <Clock className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
-              {kpis.todayAppointmentsCount}
+            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight flex items-baseline gap-1.5">
+              <span>{kpis.completedTodayCount}</span>
+              <span className="text-slate-400 font-normal text-2xl">/</span>
+              <span className="text-slate-600 font-semibold text-2xl">{kpis.remainingTodayCount}</span>
             </div>
             <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
-              Turnos para Hoy
+              Progreso del Día
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Agenda activa en tiempo real
+              {kpis.completedTodayCount} completados • {kpis.remainingTodayCount} pendientes hoy
             </p>
           </div>
         </div>
 
-        {/* KPI 2: Ingresos Proyectados */}
-        <div className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 space-y-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#a9773c]">
-            <TrendingUp className="w-4 h-4 stroke-[1.8]" />
-          </div>
-          <div>
-            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
-              ${kpis.todayProjectedRevenue.toLocaleString("es-AR")}
-            </div>
-            <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
-              Ingresos del Día
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Cálculo sobre turnos confirmados
-            </p>
-          </div>
-        </div>
-
-        {/* KPI 3: Tasa de Ocupación Semanal */}
+        {/* KPI 2: Turnos Futuros (Excluyendo Hoy) */}
         <div className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 space-y-3">
           <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#a9773c]">
             <CalendarCheck className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
             <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
-              {kpis.weeklyOccupancyRate}%
+              {kpis.futureAppointmentsCount}
             </div>
             <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
-              Ocupación Semanal
+              Turnos Futuros
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Capacidad ocupada en franjas
+              Agendados a partir de mañana
+            </p>
+          </div>
+        </div>
+
+        {/* KPI 3: Volumen (Semana y Mes) */}
+        <div className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 space-y-3">
+          <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#a9773c]">
+            <TrendingUp className="w-4 h-4 stroke-[1.8]" />
+          </div>
+          <div>
+            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight flex items-baseline gap-2">
+              <span>{kpis.totalWeekCount}</span>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">sem</span>
+              <span className="text-slate-300 font-light mx-0.5">•</span>
+              <span className="text-slate-700 text-2xl font-bold">{kpis.totalMonthCount}</span>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">mes</span>
+            </div>
+            <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
+              Volumen Registrado
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Total de reservas en la semana y el mes
             </p>
           </div>
         </div>

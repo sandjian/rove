@@ -341,9 +341,11 @@ export async function deleteManualBlockAction(blockId: string): Promise<{ succes
 }
 
 export interface AdminKpiData {
-  todayAppointmentsCount: number;
-  todayProjectedRevenue: number;
-  weeklyOccupancyRate: number;
+  completedTodayCount: number;
+  remainingTodayCount: number;
+  futureAppointmentsCount: number;
+  totalWeekCount: number;
+  totalMonthCount: number;
   recentUnseenCount: number;
 }
 
@@ -355,10 +357,14 @@ export interface ServiceItemDto {
   durationMinutes: number;
   isActive: boolean;
   sortOrder: number;
+  imageUrl?: string | null;
 }
 
 /**
- * Obtiene métricas y KPIs del Dashboard principal.
+ * Obtiene métricas y KPIs del Dashboard principal según las nuevas reglas de negocio:
+ * - KPI 1: Progreso del día (Completados / Restantes)
+ * - KPI 2: Turnos futuros agendados a partir de mañana (excluyendo hoy)
+ * - KPI 3: Volumen dual (Semana y Mes)
  */
 export async function getAdminKpisAction(): Promise<{ success: boolean; kpis?: AdminKpiData; error?: string }> {
   const session = await getAdminSession();
@@ -366,24 +372,30 @@ export async function getAdminKpisAction(): Promise<{ success: boolean; kpis?: A
 
   try {
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
+    // 1. KPI 1: Turnos de Hoy (Completados vs Restantes)
     const todayRows = await db
       .select()
       .from(appointments)
       .where(and(gte(appointments.startAt, startOfToday), lte(appointments.startAt, endOfToday)));
 
     const activeToday = todayRows.filter((a) => a.status !== "cancelled");
-    const todayRevenue = activeToday.reduce((acc, a) => acc + (a.servicePriceSnapshot || 0), 0);
+    const completedTodayCount = activeToday.filter((a) => a.status === "completed").length;
+    const remainingTodayCount = activeToday.filter((a) => a.status === "confirmed").length;
 
-    const recentRows = await db
-      .select({ count: sql<number>`count(*)` })
+    // 2. KPI 2: Turnos futuros (excluyendo hoy)
+    const futureRows = await db
+      .select()
       .from(appointments)
-      .where(gte(appointments.createdAt, last24Hours));
-    const recentUnseenCount = Number(recentRows[0]?.count || 0);
+      .where(gte(appointments.startAt, tomorrowStart));
+    const futureAppointmentsCount = futureRows.filter((a) => a.status === "confirmed").length;
 
+    // 3. KPI 3: Volumen Dual (Semana y Mes)
+    // Semana actual (lunes a domingo)
     const startOfWeek = new Date(now);
     const day = startOfWeek.getDay();
     const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
@@ -398,17 +410,33 @@ export async function getAdminKpisAction(): Promise<{ success: boolean; kpis?: A
       .select()
       .from(appointments)
       .where(and(gte(appointments.startAt, startOfWeek), lte(appointments.startAt, endOfWeek)));
-    const activeWeek = weekRows.filter((a) => a.status !== "cancelled");
-    const totalMinutesBooked = activeWeek.reduce((acc, a) => acc + (a.serviceDurationSnapshot || 45), 0);
-    const totalWeeklyCapacityMinutes = 6 * 8 * 60;
-    const occupancyRate = Math.min(100, Math.round((totalMinutesBooked / totalWeeklyCapacityMinutes) * 100));
+    const totalWeekCount = weekRows.filter((a) => a.status !== "cancelled").length;
+
+    // Mes actual (1° del mes al último día del mes)
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const monthRows = await db
+      .select()
+      .from(appointments)
+      .where(and(gte(appointments.startAt, startOfMonth), lte(appointments.startAt, endOfMonth)));
+    const totalMonthCount = monthRows.filter((a) => a.status !== "cancelled").length;
+
+    // Turnos recientes no vistos (últimas 24h)
+    const recentRows = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(appointments)
+      .where(gte(appointments.createdAt, last24Hours));
+    const recentUnseenCount = Number(recentRows[0]?.count || 0);
 
     return {
       success: true,
       kpis: {
-        todayAppointmentsCount: activeToday.length,
-        todayProjectedRevenue: todayRevenue,
-        weeklyOccupancyRate: occupancyRate,
+        completedTodayCount,
+        remainingTodayCount,
+        futureAppointmentsCount,
+        totalWeekCount,
+        totalMonthCount,
         recentUnseenCount,
       },
     };

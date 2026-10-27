@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ServiceItemDto, updateServiceAction } from "../actions";
-import { Scissors, Clock, DollarSign, Check, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Scissors, Clock, Check, AlertCircle, Eye, EyeOff, Camera } from "lucide-react";
 
 interface ServicesEditorProps {
   initialServices: ServiceItemDto[];
@@ -14,8 +14,38 @@ interface ServiceFormState {
   priceAmount: number;
   durationMinutes: number;
   isActive: boolean;
+  imageUrl?: string | null;
   status: "idle" | "saving" | "saved" | "error";
   errorMessage?: string;
+}
+
+// Fallbacks de imagen estética curada según el tipo de servicio
+const DEFAULT_SERVICE_THUMBNAILS: Record<string, string> = {
+  "corte-clasico": "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=200&q=80",
+  "perfilado-barba": "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=200&q=80",
+  "combo-rove": "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=200&q=80",
+  "corte-infantil": "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=200&q=80",
+};
+
+function getServiceThumbnail(name: string): string | null {
+  const norm = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (norm.includes("combo") || norm.includes("corte + barba") || norm.includes("completo")) {
+    return DEFAULT_SERVICE_THUMBNAILS["combo-rove"];
+  }
+  if (norm.includes("infantil") || norm.includes("nino")) {
+    return DEFAULT_SERVICE_THUMBNAILS["corte-infantil"];
+  }
+  if (norm.includes("barba") || norm.includes("perfilado")) {
+    return DEFAULT_SERVICE_THUMBNAILS["perfilado-barba"];
+  }
+  if (norm.includes("corte") || norm.includes("fade")) {
+    return DEFAULT_SERVICE_THUMBNAILS["corte-clasico"];
+  }
+  return null;
 }
 
 export function ServicesEditor({ initialServices }: ServicesEditorProps) {
@@ -26,14 +56,15 @@ export function ServicesEditor({ initialServices }: ServicesEditorProps) {
       priceAmount: srv.priceAmount,
       durationMinutes: srv.durationMinutes,
       isActive: srv.isActive,
+      imageUrl: srv.imageUrl || getServiceThumbnail(srv.name),
       status: "idle",
     }))
   );
 
   const handleFieldChange = (
     id: string,
-    field: "name" | "priceAmount" | "durationMinutes" | "isActive",
-    value: string | number | boolean
+    field: "name" | "priceAmount" | "durationMinutes" | "isActive" | "imageUrl",
+    value: string | number | boolean | null
   ) => {
     setServicesState((prev) =>
       prev.map((item) => {
@@ -118,11 +149,27 @@ export function ServicesEditor({ initialServices }: ServicesEditorProps) {
               }`}
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                {/* Columna Izquierda: Identificador & Nombre */}
+                {/* Columna Izquierda: Identificador, Avatar/Recuadro y Nombre */}
                 <div className="flex-1 flex items-center gap-3.5">
                   <span className="font-sans font-bold text-xs text-slate-400 select-none">
                     0{index + 1}
                   </span>
+
+                  {/* RECUADRO DE IMAGEN / AVATAR REDONDEADO (w-12 h-12 rounded-xl) */}
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-white/80 shadow-xs shrink-0 group bg-slate-100">
+                    {service.imageUrl ? (
+                      <img
+                        src={service.imageUrl}
+                        alt={service.name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      /* Placeholder Estético: Gradiente suave con icono de tijeras o cámara */
+                      <div className="w-full h-full bg-gradient-to-tr from-[#a9773c]/20 via-[#c49257]/15 to-amber-100/30 flex items-center justify-center text-[#a9773c]">
+                        <Scissors className="w-5 h-5 stroke-[1.8]" />
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex-1">
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
