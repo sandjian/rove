@@ -39,9 +39,9 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${urbanist.variable} font-sans h-full antialiased`}
+      className={`${urbanist.variable} ${urbanist.className} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
+      <body className={`${urbanist.className} min-h-full flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950`}>
         {children}
       </body>
     </html>
