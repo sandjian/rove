@@ -1,4 +1,4 @@
-import { getAdminServicesAction } from "../actions";
+import { getAdminServicesAction } from "@/app/admin/actions";
 import { ServicesEditor } from "./services-editor";
 
 export const instant = false;

@@ -18,8 +18,7 @@ export function AdminLoginForm() {
     const result = await loginAdminAction(formData);
 
     if (result.success) {
-      router.push("/admin");
-      router.refresh();
+      window.location.href = "/admin";
     } else {
       setError(result.error || "Credenciales incorrectas.");
       setLoading(false);

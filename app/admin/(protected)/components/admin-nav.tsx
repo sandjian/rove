@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Calendar, Scissors, LayoutDashboard, Bell } from "lucide-react";
-import { logoutAdminAction } from "../actions";
+import { logoutAdminAction } from "@/app/admin/actions";
 
 export function AdminNav({ adminEmail }: { adminEmail: string }) {
   const pathname = usePathname();

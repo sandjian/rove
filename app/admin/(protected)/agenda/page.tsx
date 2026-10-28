@@ -1,4 +1,4 @@
-import { getAdminWindowsAction } from "../actions";
+import { getAdminWindowsAction } from "@/app/admin/actions";
 import { AvailabilityManager } from "./availability-manager";
 
 export const instant = false;

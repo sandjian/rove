@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ServiceItemDto, updateServiceAction } from "../actions";
+import { ServiceItemDto, updateServiceAction } from "@/app/admin/actions";
 import { Scissors, Clock, Check, AlertCircle, Eye, EyeOff, Camera } from "lucide-react";
 
 interface ServicesEditorProps {

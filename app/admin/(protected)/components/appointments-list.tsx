@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { AdminAppointmentDto, completeAppointmentAdminAction, cancelAppointmentAdminAction } from "../actions";
+import { AdminAppointmentDto, completeAppointmentAdminAction, cancelAppointmentAdminAction } from "@/app/admin/actions";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,

@@ -1,4 +1,4 @@
-import { getAdminKpisAction, getAdminAppointmentsAction } from "./actions";
+import { getAdminKpisAction, getAdminAppointmentsAction } from "@/app/admin/actions";
 import { AppointmentsList } from "./components/appointments-list";
 import { RealtimeClock } from "./components/realtime-clock";
 import { CapacityDonutChart } from "./components/capacity-donut-chart";

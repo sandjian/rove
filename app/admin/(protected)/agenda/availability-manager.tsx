@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AdminAvailabilityWindowDto, createManualBlockAction, deleteManualBlockAction } from "../actions";
+import { AdminAvailabilityWindowDto, createManualBlockAction, deleteManualBlockAction } from "@/app/admin/actions";
 import { Clock, Plus, Trash2, Calendar, ShieldAlert, Check } from "lucide-react";
 
 interface AvailabilityManagerProps {
