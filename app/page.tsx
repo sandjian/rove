@@ -66,7 +66,7 @@ export default function HomePage() {
       number: "03",
       title: "Eventos Especiales",
       description: "Servicio exclusivo in-situ o en salón para novios, graduaciones, fiestas de egresados y producciones con estilismo integral.",
-      image: "https://images.unsplash.com/photo-1517832606589-715786d40e1b?auto=format&fit=crop&w=800&q=80",
+      image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
       tags: ["Casamientos", "Egresados", "Producciones"],
     },
   ];
@@ -517,12 +517,8 @@ export default function HomePage() {
                     </div>
 
                     <div className="space-y-1">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a9773c]/10 border border-[#a9773c]/20 text-[#a9773c] text-[10px] font-bold uppercase tracking-widest">
-                        <Sparkles className="w-3 h-3" />
-                        ROVE ON-DEMAND
-                      </div>
                       <h2 className="font-sans font-bold text-2xl sm:text-3xl lg:text-4xl text-slate-900 tracking-tight leading-tight">
-                        LA EXPERIENCIA ROVE EN TU EVENTO
+                        ROVE EN TU EVENTO
                       </h2>
                     </div>
                   </div>
@@ -530,7 +526,7 @@ export default function HomePage() {
                   {/* Propuesta de Marca */}
                   <div className="space-y-3 text-slate-600 text-xs sm:text-sm leading-relaxed">
                     <p>
-                      Llevamos el ritual y la estética de <strong>Rove Barbería</strong> directamente a tu evento. Diseño de espacios móviles, barberos de primer nivel y atención personalizada para que cada detalle refleje la máxima elegancia.
+                      Llevamos la experiencia de <strong>Rove Barbería</strong> directamente a tu evento. Atención personalizada para que cada detalle refleje la importancia del momento.
                     </p>
                     <p className="text-slate-500">
                       Servicio integral orientado a <strong>casamientos, fiestas de egresados, celebraciones corporativas y producciones audiovisuales</strong>. Montaje in-situ con estándares de barbería de autor.
