@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Urbanist } from "next/font/google";
+import { Urbanist, Krona_One } from "next/font/google";
 import "./globals.css";
 
 const urbanist = Urbanist({
   variable: "--font-urbanist",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const kronaOne = Krona_One({
+  variable: "--font-krona-one",
+  weight: "400",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -39,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${urbanist.variable} ${urbanist.className} h-full antialiased`}
+      className={`${urbanist.variable} ${kronaOne.variable} ${urbanist.className} h-full antialiased`}
     >
       <body className={`${urbanist.className} min-h-full flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950`}>
         {children}

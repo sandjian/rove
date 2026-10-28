@@ -44,7 +44,7 @@ export default async function AdminDashboardPage() {
             <Clock className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-sans font-bold text-3xl text-slate-900 tracking-tight flex items-baseline gap-1.5">
+            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight flex items-baseline gap-1.5">
               <span>{kpis.completedTodayCount}</span>
               <span className="text-slate-400 font-normal text-2xl">/</span>
               <span className="text-slate-600 font-semibold text-2xl">{kpis.remainingTodayCount}</span>
@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
             <CalendarCheck className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-sans font-bold text-3xl text-slate-900 tracking-tight">
+            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
               {kpis.futureAppointmentsCount}
             </div>
             <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
             <TrendingUp className="w-4 h-4 stroke-[1.8]" />
           </div>
           <div>
-            <div className="font-sans font-bold text-3xl text-slate-900 tracking-tight flex items-baseline gap-2">
+            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight flex items-baseline gap-2">
               <span>{kpis.totalWeekCount}</span>
               <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">sem</span>
               <span className="text-slate-300 font-light mx-0.5">•</span>
@@ -99,16 +99,8 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* LISTADO DE TURNOS / CRONOGRAMA */}
-      <div className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 sm:p-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-            <span className="w-2 h-2 rounded-full bg-[#a9773c]" />
-            Próximos Turnos
-          </div>
-        </div>
-        <AppointmentsList initialAppointments={apptsRes.appointments || []} />
-      </div>
+      {/* CALENDARIO INTERACTIVO & LISTADO DE TURNOS */}
+      <AppointmentsList initialAppointments={apptsRes.appointments || []} />
     </div>
   );
 }

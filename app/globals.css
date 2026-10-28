@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-urbanist), system-ui, -apple-system, sans-serif;
   --font-body: var(--font-urbanist), system-ui, -apple-system, sans-serif;
-  --font-krona: var(--font-urbanist);
+  --font-krona: var(--font-krona-one), 'Krona One', sans-serif;
   --font-heading: var(--font-urbanist);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -124,9 +124,17 @@
   * {
     @apply border-border outline-ring/50;
   }
-  html, body, button, input, optgroup, select, textarea {
+
+  html,
+  body,
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
     font-family: var(--font-urbanist), 'Urbanist', system-ui, -apple-system, sans-serif !important;
   }
+
   body {
     @apply bg-background text-foreground;
   }
