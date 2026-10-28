@@ -617,7 +617,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
 
           <div className="max-w-md mx-auto text-xs text-slate-600 space-y-2 bg-amber-50/50 p-4 rounded-xl border border-amber-200/60">
             <p>
-              📧 Se ha emitido un correo de confirmación a <strong className="text-slate-900 font-semibold">{confirmedBooking.customerEmail}</strong>.
+              Se ha emitido un correo de confirmación a <strong className="text-slate-900 font-semibold">{confirmedBooking.customerEmail}</strong>.
             </p>
             <p>
               Si necesitás cancelar tu reserva en el futuro, podés hacerlo con un clic desde el correo o guardando este enlace:

@@ -72,7 +72,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#faf6f0] via-[#f7f3ec] to-[#f2ede4] text-slate-800 font-sans antialiased relative overflow-x-hidden selection:bg-[#a9773c]/20 selection:text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-taupe-800 via-taupe-400/40 to-[#f2ede4] text-slate-800 font-sans antialiased relative overflow-x-hidden selection:bg-[#a9773c]/20 selection:text-slate-900">
       {/* Fondo de esferas y reflejos luminosos (Glass ambient lighting camel cálido) */}
       <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#a9773c]/15 via-[#c49257]/10 to-transparent blur-[130px] pointer-events-none -z-10" />
       <div className="fixed bottom-[-10%] left-[-5%] w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-[#8d5e2a]/10 via-[#d4a86a]/15 to-transparent blur-[140px] pointer-events-none -z-10" />
@@ -89,12 +89,25 @@ export default function HomePage() {
         {/* Anillo de pulso sutil */}
         <span className="absolute -inset-1 rounded-full bg-[#25D366] opacity-35 animate-ping pointer-events-none" />
 
-        {/* SVG Oficial del Logo de WhatsApp */}
+        {/* Logo auténtico de WhatsApp: Burbuja de conversación y auricular telefónico nítido en blanco */}
         <svg
-          className="w-7 h-7 fill-current relative z-10 drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
-          viewBox="0 0 24 24"
+          className="w-8 h-8 relative z-10 drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+          viewBox="0 0 32 32"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.586 1.777.828 2.788.828 3.18 0 5.767-2.587 5.767-5.766.001-3.181-2.585-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.158.57 4.184 1.564 5.941l-1.564 5.715 5.864-1.538c1.701.928 3.649 1.458 5.72 1.458 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
+          {/* Contorno de la burbuja */}
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M16 3C8.82 3 3 8.82 3 16c0 2.45.68 4.75 1.87 6.72L3 29l6.47-1.83A12.93 12.93 0 0016 29c7.18 0 13-5.82 13-13S23.18 3 16 3zm0 23.82c-2.14 0-4.14-.59-5.86-1.62l-.42-.25-4.35 1.23 1.25-4.22-.27-.44A10.74 10.74 0 015.18 16c0-5.97 4.85-10.82 10.82-10.82S26.82 10.03 26.82 16 21.97 26.82 16 26.82z"
+            fill="#ffffff"
+          />
+          {/* Teléfono / auricular interno relleno */}
+          <path
+            d="M21.72 19.34c-.31-.16-1.84-.91-2.12-1.01-.28-.1-.49-.16-.7.16-.21.31-.8 1.01-.98 1.22-.18.21-.36.23-.67.08-.31-.16-1.32-.49-2.52-1.56-.93-.83-1.56-1.86-1.74-2.17-.18-.31-.02-.48.14-.63.14-.14.31-.36.47-.55.16-.18.21-.31.31-.52.1-.21.05-.39-.03-.55-.08-.16-.7-1.69-.96-2.31-.25-.6-.51-.52-.7-.53l-.6-.01c-.21 0-.55.08-.83.39-.28.31-1.09 1.07-1.09 2.61s1.11 3.03 1.27 3.24c.16.21 2.19 3.34 5.31 4.69.74.32 1.32.51 1.77.66.75.24 1.43.21 1.97.13.6-.09 1.84-.75 2.1-1.48.26-.73.26-1.35.18-1.48-.08-.13-.28-.21-.59-.36z"
+            fill="#ffffff"
+          />
         </svg>
       </a>
 
@@ -167,7 +180,7 @@ export default function HomePage() {
                     render={
                       <a
                         href="#reservar"
-                        className="group relative rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase px-8 py-5 h-auto transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-[0_10px_25px_-5px_rgba(169,119,60,0.4)] hover:shadow-[0_16px_35px_-5px_rgba(169,119,60,0.6)] flex items-center gap-2 border border-white/40 overflow-hidden"
+                        className="group relative rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase px-8 py-5 h-auto transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-[0_10px_25px_-5px_rgba(169,119,60,0.4)] hover:shadow-[0_16px_35px_-5px_rgba(169,119,60,0.6)] flex items-center gap-2 border border-white/10 overflow-hidden"
                       >
                         <span className="relative z-10 flex items-center gap-2">
                           Reservar Turno ↓
@@ -536,17 +549,15 @@ export default function HomePage() {
                   {/* Highlights en píldoras */}
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <span className="px-3 py-1.5 rounded-xl bg-white/80 border border-amber-900/10 text-slate-700 text-[11px] font-medium shadow-xs">
-                      🎉 Fiestas de Egresados
+                      Fiestas de Egresados
                     </span>
                     <span className="px-3 py-1.5 rounded-xl bg-white/80 border border-amber-900/10 text-slate-700 text-[11px] font-medium shadow-xs">
-                      💍 Casamientos & Grooming
+                      Casamientos & Grooming
                     </span>
                     <span className="px-3 py-1.5 rounded-xl bg-white/80 border border-amber-900/10 text-slate-700 text-[11px] font-medium shadow-xs">
-                      🎬 Producciones & Shooting
+                      Producciones & Shooting
                     </span>
-                    <span className="px-3 py-1.5 rounded-xl bg-white/80 border border-amber-900/10 text-slate-700 text-[11px] font-medium shadow-xs">
-                      ✨ Barbería Móvil In-Situ
-                    </span>
+
                   </div>
 
                   {/* Botón CTA Corporativo */}
