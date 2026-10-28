@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Calendar, Scissors, LayoutDashboard } from "lucide-react";
+import { LogOut, Calendar, Scissors, LayoutDashboard, Bell } from "lucide-react";
 import { logoutAdminAction } from "../actions";
 
 export function AdminNav({ adminEmail }: { adminEmail: string }) {
@@ -53,16 +53,31 @@ export function AdminNav({ adminEmail }: { adminEmail: string }) {
         })}
       </nav>
 
-      {/* Logout */}
-      <form action={logoutAdminAction}>
+      {/* Notificaciones y Logout */}
+      <div className="flex items-center gap-1 sm:gap-2">
+        {/* Campana de Notificaciones con indicador camel */}
         <button
-          type="submit"
-          className="p-2.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50/60 transition-colors"
-          title="Cerrar Sesión"
+          type="button"
+          className="relative p-2.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-colors"
+          title="Notificaciones"
+          aria-label="Notificaciones"
         >
-          <LogOut className="w-4 h-4" />
+          <Bell className="w-4 h-4" />
+          {/* Punto indicador de nuevos turnos */}
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#a9773c] ring-2 ring-white" />
         </button>
-      </form>
+
+        {/* Logout */}
+        <form action={logoutAdminAction}>
+          <button
+            type="submit"
+            className="p-2.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50/60 transition-colors"
+            title="Cerrar Sesión"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </form>
+      </div>
     </header>
   );
 }

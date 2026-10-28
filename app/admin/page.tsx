@@ -1,6 +1,8 @@
 import { getAdminKpisAction, getAdminAppointmentsAction } from "./actions";
 import { AppointmentsList } from "./components/appointments-list";
-import { Clock, CalendarCheck, TrendingUp } from "lucide-react";
+import { RealtimeClock } from "./components/realtime-clock";
+import { CapacityDonutChart } from "./components/capacity-donut-chart";
+import { Sparkles, TrendingUp } from "lucide-react";
 
 export const instant = false;
 
@@ -23,83 +25,90 @@ export default async function AdminDashboardPage() {
     recentUnseenCount: 0,
   };
 
+  // Fecha actual formateada en español
+  const now = new Date();
+  const formattedFullDate = new Intl.DateTimeFormat("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(now);
+
+  // Capacidad de Reserva estimada: 13 franjas horarias operativas diarias (~26 turnos potenciales)
+  const todayTotal = kpis.completedTodayCount + kpis.remainingTodayCount;
+  const capacityPercentage = Math.min(100, Math.round((todayTotal / 20) * 100)) || 15;
+
   return (
     <div className="space-y-6">
-      {/* ALERTA TIPOGRÁFICA MINIMALISTA (SIN BANNERS INVASIVOS NI FONDOS PESADOS) */}
-      {kpis.recentUnseenCount > 0 && (
-        <div className="flex items-center gap-2 text-xs text-slate-700 px-2 py-1">
-          <span className="w-2 h-2 rounded-full bg-[#a9773c] animate-pulse" />
-          <span className="font-semibold text-slate-900">
-            {kpis.recentUnseenCount} {kpis.recentUnseenCount === 1 ? "nuevo turno registrado" : "nuevos turnos registrados"}
-          </span>
-          <span className="text-slate-500">en las últimas 24 horas.</span>
-        </div>
-      )}
+      {/* ========================================================================= */}
+      {/* SECCIÓN DE BIENVENIDA ASIMÉTRICA: TARJETA PRINCIPAL + CAPACIDAD DONUT */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
+        {/* Tarjeta Principal (col-span-3): Bienvenida, fecha y reloj en tiempo real */}
+        <div className="lg:col-span-3 rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 sm:p-8 flex flex-col justify-between space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#a9773c]">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Panel de Control</span>
+              </div>
+              <h1 className="font-krona text-2xl sm:text-3xl lg:text-4xl text-slate-900 tracking-tight">
+                Buen día, Matías
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 font-normal capitalize">
+                {formattedFullDate}
+              </p>
+            </div>
 
-      {/* PANEL DE KPIS DE IMPORTANCIA */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* KPI 1: Progreso del Día (Completados / Restantes) */}
-        <div className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 space-y-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#a9773c]">
-            <Clock className="w-4 h-4 stroke-[1.8]" />
-          </div>
-          <div>
-            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight flex items-baseline gap-1.5">
-              <span>{kpis.completedTodayCount}</span>
-              <span className="text-slate-400 font-normal text-2xl">/</span>
-              <span className="text-slate-600 font-semibold text-2xl">{kpis.remainingTodayCount}</span>
+            {/* Reloj en tiempo real sin desajustes de hidratación */}
+            <div>
+              <RealtimeClock />
             </div>
-            <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
-              Progreso del Día
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              {kpis.completedTodayCount} completados • {kpis.remainingTodayCount} pendientes hoy
-            </p>
           </div>
-        </div>
 
-        {/* KPI 2: Turnos Futuros (Excluyendo Hoy) */}
-        <div className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 space-y-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#a9773c]">
-            <CalendarCheck className="w-4 h-4 stroke-[1.8]" />
-          </div>
-          <div>
-            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight">
-              {kpis.futureAppointmentsCount}
-            </div>
-            <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
-              Turnos Futuros
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Agendados a partir de mañana
-            </p>
+          {/* Resumen rápido al pie de la tarjeta */}
+          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-slate-600 border-t border-amber-900/10">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-slate-900">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              {todayTotal} {todayTotal === 1 ? "turno programado" : "turnos programados"} para hoy
+            </span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500">
+              {kpis.completedTodayCount} completados
+            </span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500">
+              {kpis.remainingTodayCount} pendientes
+            </span>
           </div>
         </div>
 
-        {/* KPI 3: Volumen (Semana y Mes) */}
-        <div className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 space-y-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#a9773c]">
-            <TrendingUp className="w-4 h-4 stroke-[1.8]" />
-          </div>
-          <div>
-            <div className="font-sans font-bold text-3xl font-normal text-slate-900 tracking-tight flex items-baseline gap-2">
-              <span>{kpis.totalWeekCount}</span>
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">sem</span>
-              <span className="text-slate-300 font-light mx-0.5">•</span>
-              <span className="text-slate-700 text-2xl font-bold">{kpis.totalMonthCount}</span>
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">mes</span>
-            </div>
-            <div className="text-xs font-semibold text-slate-800 uppercase tracking-wider mt-1">
-              Volumen Registrado
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Total de reservas en la semana y el mes
+        {/* Tarjeta de Capacidad (col-span-1): Gráfico tipo Donut con SVG puro */}
+        <div className="lg:col-span-1 rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] p-6 sm:p-8 flex flex-col justify-between items-center text-center space-y-4">
+          <div className="w-full text-center">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Capacidad de Reserva
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Demanda de agenda hoy
             </p>
+          </div>
+
+          <div className="py-1">
+            <CapacityDonutChart percentage={capacityPercentage} size={115} strokeWidth={11} />
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+            <TrendingUp className="w-3.5 h-3.5 text-[#a9773c]" />
+            <span>{todayTotal} turnos agendados</span>
           </div>
         </div>
       </div>
 
-      {/* CALENDARIO INTERACTIVO & LISTADO DE TURNOS */}
+      {/* ========================================================================= */}
+      {/* CALENDARIO INTERACTIVO (DAY, WEEK, LIST) */}
+      {/* ========================================================================= */}
       <AppointmentsList initialAppointments={apptsRes.appointments || []} />
     </div>
   );
