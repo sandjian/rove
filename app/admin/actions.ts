@@ -505,3 +505,79 @@ export async function updateServiceAction(input: {
   }
 }
 
+export interface AdminNotificationDto {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  serviceName: string;
+  formattedTime: string;
+  formattedDate: string;
+  status: "confirmed" | "cancelled" | "completed";
+  createdAt: string;
+  isObsolete: boolean;
+}
+
+/**
+ * Obtiene las notificaciones de nuevos turnos agendados recientemente.
+ * Permite al panel de administración enterarse en tiempo real de nuevas reservas.
+ */
+export async function getAdminNotificationsAction(): Promise<{
+  success: boolean;
+  notifications: AdminNotificationDto[];
+  error?: string;
+}> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, notifications: [], error: "No autorizado." };
+
+  try {
+    const rows = await db
+      .select()
+      .from(appointments)
+      .orderBy(desc(appointments.createdAt))
+      .limit(20);
+
+    const timeFmt = new Intl.DateTimeFormat("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+    const dateFmt = new Intl.DateTimeFormat("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+
+    const now = new Date();
+
+    const notifications: AdminNotificationDto[] = rows.map((r) => {
+      // Un turno es obsoleto para una notificación de "nuevo turno" si ya fue cancelado
+      // o si la fecha de inicio del turno ya pasó hace más de 24 horas.
+      const isPast = r.endAt.getTime() < now.getTime();
+      const isObsolete = r.status === "cancelled" || isPast;
+
+      return {
+        id: r.id,
+        customerName: r.customerName,
+        customerPhone: r.customerPhone,
+        serviceName: r.serviceNameSnapshot,
+        formattedTime: timeFmt.format(r.startAt),
+        formattedDate: dateFmt.format(r.startAt),
+        status: r.status as "confirmed" | "cancelled" | "completed",
+        createdAt: r.createdAt.toISOString(),
+        isObsolete,
+      };
+    });
+
+    return { success: true, notifications };
+  } catch (error) {
+    return {
+      success: false,
+      notifications: [],
+      error: error instanceof Error ? error.message : "Error al cargar notificaciones",
+    };
+  }
+}
+

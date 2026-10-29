@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Calendar, Scissors, LayoutDashboard, Bell } from "lucide-react";
+import { LogOut, Calendar, Scissors, LayoutDashboard } from "lucide-react";
 import { logoutAdminAction } from "@/app/admin/actions";
+import { NotificationPopover } from "./notification-popover";
 
 export function AdminNav({ adminEmail }: { adminEmail: string }) {
   const pathname = usePathname();
@@ -15,10 +16,10 @@ export function AdminNav({ adminEmail }: { adminEmail: string }) {
   ];
 
   return (
-    <header className="rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] px-6 py-4 flex items-center justify-between">
+    <header className="relative z-30 rounded-[2rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] px-6 py-4 flex items-center justify-between">
       {/* Logo Rove */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] flex items-center justify-center text-white shadow-sm shadow-[#a9773c]/40 font-bold text-xs">
+        <div className="w-8 h-8 rounded-xl bg-linear-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] flex items-center justify-center text-white shadow-sm shadow-[#a9773c]/40 font-bold text-xs">
           R
         </div>
         <div>
@@ -55,17 +56,8 @@ export function AdminNav({ adminEmail }: { adminEmail: string }) {
 
       {/* Notificaciones y Logout */}
       <div className="flex items-center gap-1 sm:gap-2">
-        {/* Campana de Notificaciones con indicador camel */}
-        <button
-          type="button"
-          className="relative p-2.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-colors"
-          title="Notificaciones"
-          aria-label="Notificaciones"
-        >
-          <Bell className="w-4 h-4" />
-          {/* Punto indicador de nuevos turnos */}
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#a9773c] ring-2 ring-white" />
-        </button>
+        {/* Campana de Notificaciones interactiva */}
+        <NotificationPopover />
 
         {/* Logout */}
         <form action={logoutAdminAction}>

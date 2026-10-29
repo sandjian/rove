@@ -165,7 +165,7 @@ export function ServicesEditor({ initialServices }: ServicesEditorProps) {
                       />
                     ) : (
                       /* Placeholder Estético: Gradiente suave con icono de tijeras o cámara */
-                      <div className="w-full h-full bg-gradient-to-tr from-[#a9773c]/20 via-[#c49257]/15 to-amber-100/30 flex items-center justify-center text-[#a9773c]">
+                      <div className="w-full h-full bg-linear-to-tr from-[#a9773c]/20 via-[#c49257]/15 to-amber-100/30 flex items-center justify-center text-[#a9773c]">
                         <Scissors className="w-5 h-5 stroke-[1.8]" />
                       </div>
                     )}
@@ -280,7 +280,7 @@ export function ServicesEditor({ initialServices }: ServicesEditorProps) {
                     type="button"
                     disabled={service.status === "saving"}
                     onClick={() => handleSave(service)}
-                    className="rounded-xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase px-4 py-2 shadow-sm shadow-[#a9773c]/30 hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50"
+                    className="rounded-xl bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase px-4 py-2 shadow-sm shadow-[#a9773c]/30 hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50"
                   >
                     Guardar
                   </button>

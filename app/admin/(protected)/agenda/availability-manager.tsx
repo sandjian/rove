@@ -162,7 +162,7 @@ export function AvailabilityManager({ initialWindows }: AvailabilityManagerProps
             <button
               type="button"
               onClick={handleSaveSchedule}
-              className="rounded-xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase px-4 py-2 shadow-sm shadow-[#a9773c]/30 hover:scale-[1.02] active:scale-95 transition-all"
+              className="rounded-xl bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase px-4 py-2 shadow-sm shadow-[#a9773c]/30 hover:scale-[1.02] active:scale-95 transition-all"
             >
               Guardar Horarios
             </button>

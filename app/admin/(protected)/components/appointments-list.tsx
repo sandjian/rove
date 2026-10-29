@@ -330,7 +330,7 @@ export function AppointmentsList({ initialAppointments }: { initialAppointments:
                     handleComplete(selectedAppointment.id);
                     setIsDetailOpen(false);
                   }}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#a9773c] to-[#c49257] hover:opacity-95 text-white font-semibold text-xs transition-all shadow-sm shadow-[#a9773c]/30"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-linear-to-r from-[#a9773c] to-[#c49257] hover:opacity-95 text-white font-semibold text-xs transition-all shadow-sm shadow-[#a9773c]/30"
                 >
                   Marcar Completado
                 </button>
@@ -363,7 +363,7 @@ export function AppointmentsList({ initialAppointments }: { initialAppointments:
           />
 
           <div className="relative w-full max-w-md rounded-[2rem] bg-white/95 backdrop-blur-2xl border border-white/90 shadow-[0_20px_60px_-15px_rgba(169,119,60,0.25)] p-6 sm:p-8 space-y-6 animate-in zoom-in-95 fade-in duration-200 z-10 text-slate-800">
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+            <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white to-transparent opacity-80" />
 
             <button
               type="button"
@@ -416,7 +416,7 @@ export function AppointmentsList({ initialAppointments }: { initialAppointments:
                 type="button"
                 onClick={handleConfirmCancel}
                 disabled={Boolean(loadingId)}
-                className="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-semibold text-xs uppercase tracking-wider transition-all duration-200 shadow-md shadow-rose-600/30 hover:scale-[1.02] active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-linear-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-semibold text-xs uppercase tracking-wider transition-all duration-200 shadow-md shadow-rose-600/30 hover:scale-[1.02] active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {loadingId ? (
                   <>
@@ -506,7 +506,7 @@ function DayView({
           const hourAppts = getAppointmentsForHour(hour);
 
           return (
-            <div key={hour} className="flex min-h-[5rem] group hover:bg-amber-50/20 transition-colors">
+            <div key={hour} className="flex min-h-20 group hover:bg-amber-50/20 transition-colors">
               {/* Columna de Hora Krona One */}
               <div className="w-20 sm:w-24 shrink-0 p-3 sm:p-4 border-r border-amber-900/10 flex items-start justify-center select-none bg-white/20">
                 <span className="font-krona text-[11px] sm:text-xs text-slate-700 tracking-wider">
@@ -636,7 +636,7 @@ function WeekView({
 
   return (
     <div className="rounded-[1.7rem] bg-white/40 backdrop-blur-xl border border-white/70 shadow-sm overflow-x-auto animate-in fade-in duration-200">
-      <div className="min-w-[850px]">
+      <div className="min-w-212.5">
         {/* Cabecera de Días de la semana con fuente Krona One */}
         <div className="grid grid-cols-8 border-b border-amber-900/10 bg-white/30 sticky top-0 z-10 backdrop-blur-md">
           <div className="p-3 text-center border-r border-amber-900/10 flex items-center justify-center">

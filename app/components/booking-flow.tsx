@@ -183,7 +183,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
           >
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${step === 1
-                ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
+                ? "bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
                 : step > 1
                   ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
@@ -209,7 +209,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
           >
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${step === 2
-                ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
+                ? "bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
                 : step > 2
                   ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
@@ -235,7 +235,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
           >
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${step === 3
-                ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
+                ? "bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white shadow-md shadow-[#a9773c]/30"
                 : step > 3
                   ? "bg-[#a9773c]/10 text-[#a9773c] border border-[#a9773c]/30"
                   : "bg-slate-100 text-slate-400"
@@ -291,7 +291,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                     key={service.id}
                     type="button"
                     onClick={() => handleSelectService(service)}
-                    className={`group relative text-left rounded-[1.8rem] overflow-hidden border transition-all duration-300 flex flex-col justify-between min-h-[340px] sm:min-h-[380px] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 ${isSelected
+                    className={`group relative text-left rounded-[1.8rem] overflow-hidden border transition-all duration-300 flex flex-col justify-between min-h-85 sm:min-h-95 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 ${isSelected
                       ? "border-[#a9773c] ring-2 ring-[#a9773c]/50 shadow-[0_12px_32px_rgba(169,119,60,0.2)]"
                       : "border-white/80 hover:border-[#a9773c]/40 bg-white/50"
                       }`}
@@ -334,7 +334,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                           </div>
                         </div>
 
-                        <span className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#a9773c] to-[#c49257] group-hover:from-[#c49257] group-hover:to-[#a9773c] text-white text-[11px] font-bold shadow-md shadow-black/30 flex items-center gap-1 group-hover:scale-105 transition-all">
+                        <span className="px-3 py-1.5 rounded-full bg-linear-to-r from-[#a9773c] to-[#c49257] group-hover:from-[#c49257] group-hover:to-[#a9773c] text-white text-[11px] font-bold shadow-md shadow-black/30 flex items-center gap-1 group-hover:scale-105 transition-all">
                           Elegir &rarr;
                         </span>
                       </div>
@@ -401,7 +401,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                         type="button"
                         onClick={() => setSelectedDayKey(day.dateKey)}
                         className={`p-3 rounded-2xl border text-center transition-all duration-150 ${isDaySelected
-                          ? "bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-bold border-transparent shadow-md shadow-[#a9773c]/30"
+                          ? "bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-bold border-transparent shadow-md shadow-[#a9773c]/30"
                           : "bg-white/80 border-slate-200/70 text-slate-700 hover:bg-white hover:border-[#a9773c]/30 shadow-sm"
                           }`}
                       >
@@ -435,7 +435,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
                           type="button"
                           onClick={() => handleSelectSlot(slot)}
                           className={`py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all ${isSlotSelected
-                            ? "bg-gradient-to-r from-[#a9773c] to-[#c49257] text-white border-transparent shadow-md shadow-[#a9773c]/25"
+                            ? "bg-linear-to-r from-[#a9773c] to-[#c49257] text-white border-transparent shadow-md shadow-[#a9773c]/25"
                             : "bg-white/90 border-slate-200/80 text-slate-800 hover:border-[#a9773c] hover:text-[#a9773c] shadow-sm hover:bg-white"
                             }`}
                         >
@@ -559,7 +559,7 @@ export function BookingFlow({ initialServices }: BookingFlowProps) {
             <button
               type="submit"
               disabled={isPending}
-              className="px-7 py-3 rounded-full bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] hover:opacity-95 text-white font-bold text-xs sm:text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_24px_-4px_rgba(169,119,60,0.45)] hover:shadow-[0_12px_28px_-4px_rgba(169,119,60,0.6)] hover:scale-[1.02]"
+              className="px-7 py-3 rounded-full bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] hover:opacity-95 text-white font-bold text-xs sm:text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_24px_-4px_rgba(169,119,60,0.45)] hover:shadow-[0_12px_28px_-4px_rgba(169,119,60,0.6)] hover:scale-[1.02]"
             >
               {isPending ? (
                 <>

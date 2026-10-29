@@ -72,11 +72,11 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-taupe-800 via-taupe-400/40 to-[#f2ede4] text-slate-800 font-sans antialiased relative overflow-x-hidden selection:bg-[#a9773c]/20 selection:text-slate-900">
+    <div className="min-h-screen bg-linear-to-br from-taupe-800 via-taupe-400/40 to-[#f2ede4] text-slate-800 font-sans antialiased relative overflow-x-hidden selection:bg-[#a9773c]/20 selection:text-slate-900">
       {/* Fondo de esferas y reflejos luminosos (Glass ambient lighting camel cálido) */}
-      <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#a9773c]/15 via-[#c49257]/10 to-transparent blur-[130px] pointer-events-none -z-10" />
-      <div className="fixed bottom-[-10%] left-[-5%] w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-[#8d5e2a]/10 via-[#d4a86a]/15 to-transparent blur-[140px] pointer-events-none -z-10" />
-      <div className="fixed top-[40%] left-[20%] w-[500px] h-[500px] rounded-full bg-gradient-to-r from-white/70 to-amber-50/40 blur-[100px] pointer-events-none -z-10" />
+      <div className="fixed top-[-10%] right-[-5%] w-150 h-150 rounded-full bg-linear-to-br from-[#a9773c]/15 via-[#c49257]/10 to-transparent blur-[130px] pointer-events-none -z-10" />
+      <div className="fixed bottom-[-10%] left-[-5%] w-162.5 h-162.5 rounded-full bg-linear-to-tr from-[#8d5e2a]/10 via-[#d4a86a]/15 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed top-[40%] left-[20%] w-125 h-125 rounded-full bg-linear-to-r from-white/70 to-amber-50/40 blur-[100px] pointer-events-none -z-10" />
 
       {/* BOTÓN FLOTANTE CON EL LOGO OFICIAL DE WHATSAPP */}
       <a
@@ -118,13 +118,13 @@ export default function HomePage() {
         {/* ========================================================================= */}
         <section className="relative rounded-[2rem] sm:rounded-[2.5rem] bg-white/45 backdrop-blur-2xl border border-white/70 shadow-[0_12px_40px_0_rgba(169,119,60,0.06)] p-6 sm:p-10 lg:p-12 overflow-hidden">
           {/* Brillo especular superior */}
-          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+          <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white to-transparent opacity-80" />
 
           {/* BARRA DE NAVEGACIÓN SUPERIOR */}
           <header className="relative z-10 flex items-center justify-between pb-8 sm:pb-12 border-b border-amber-900/10">
             {/* Logo a la izquierda */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] flex items-center justify-center text-white shadow-sm shadow-[#a9773c]/40 font-bold text-xs group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 rounded-xl bg-linear-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] flex items-center justify-center text-white shadow-sm shadow-[#a9773c]/40 font-bold text-xs group-hover:scale-105 transition-transform">
                 R
               </div>
               <span className="font-sans font-bold text-sm sm:text-base tracking-[0.2em] text-slate-900 uppercase">
@@ -152,9 +152,9 @@ export default function HomePage() {
             <div className="lg:col-span-7 space-y-6 sm:space-y-8">
               <MotionFade delay={0.1}>
                 {/* Título estilo 3D cromo/cristal de NOVA GLASS */}
-                <h1 className="font-sans font-bold text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-[0.04em] uppercase leading-[0.95] select-none text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-700 to-slate-400 drop-shadow-[0_4px_12px_rgba(255,255,255,0.9)]">
+                <h1 className="font-sans font-bold text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-[0.04em] uppercase leading-[0.95] select-none text-transparent bg-clip-text bg-linear-to-b from-slate-900 via-slate-700 to-slate-400 drop-shadow-[0_4px_12px_rgba(255,255,255,0.9)]">
                   ROVE <br />
-                  <span className="tracking-[0.08em] bg-clip-text text-transparent bg-gradient-to-r from-slate-800 via-amber-950 to-slate-600">
+                  <span className="tracking-[0.08em] bg-clip-text text-transparent bg-linear-to-r from-slate-800 via-amber-950 to-slate-600">
                     BARBER
                   </span>
                 </h1>
@@ -180,13 +180,13 @@ export default function HomePage() {
                     render={
                       <a
                         href="#reservar"
-                        className="group relative rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase px-8 py-5 h-auto transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-[0_10px_25px_-5px_rgba(169,119,60,0.4)] hover:shadow-[0_16px_35px_-5px_rgba(169,119,60,0.6)] flex items-center gap-2 border border-white/10 overflow-hidden"
+                        className="group relative rounded-2xl bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase px-8 py-5 h-auto transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-[0_10px_25px_-5px_rgba(169,119,60,0.4)] hover:shadow-[0_16px_35px_-5px_rgba(169,119,60,0.6)] flex items-center gap-2 border border-white/10 overflow-hidden"
                       >
                         <span className="relative z-10 flex items-center gap-2">
                           Reservar Turno ↓
                         </span>
                         {/* Brillo dinámico en hover */}
-                        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-linear-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
                       </a>
                     }
                   />
@@ -211,7 +211,7 @@ export default function HomePage() {
             {/* LADO DERECHO: IMAGEN DEL BARBERO CON MINIMAPA GLASSMORFICO DESFASADO (oculto en pantallas menores a lg) Y SELLO 360 */}
             <div className="lg:col-span-5 relative flex justify-center pt-6 lg:pt-0">
               <MotionFade delay={0.3} direction="left">
-                <div className="relative w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[2rem] p-2.5 bg-white/40 border border-white/80 shadow-[0_20px_50px_rgba(169,119,60,0.08)] backdrop-blur-xl">
+                <div className="relative w-full max-w-sm sm:max-w-md aspect-4/5 rounded-[2rem] p-2.5 bg-white/40 border border-white/80 shadow-[0_20px_50px_rgba(169,119,60,0.08)] backdrop-blur-xl">
                   {/* Contenedor de la foto */}
                   <div className="relative w-full h-full rounded-[1.6rem] overflow-hidden bg-slate-100">
                     <img
@@ -219,7 +219,7 @@ export default function HomePage() {
                       alt="Barbero Rove"
                       className="w-full h-full object-cover object-center filter contrast-[1.05] brightness-[1.02]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-linear-to-t from-slate-950/60 via-slate-950/10 to-transparent pointer-events-none" />
                   </div>
 
                   {/* MINI MAPA GLASSMÓRFICO DESFASADO (Oculto para pantallas menores a lg: hidden lg:block) */}
@@ -316,7 +316,7 @@ export default function HomePage() {
                           <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-white shadow-xl flex items-center justify-center text-white">
                             <Scissors className="w-3.5 h-3.5 text-amber-300 -rotate-45" />
                           </div>
-                          <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-slate-900 -mt-[1px]" />
+                          <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-[5px] border-t-slate-900 -mt-px" />
                         </div>
                       </div>
                     </div>
@@ -338,7 +338,7 @@ export default function HomePage() {
                         href="https://www.google.com/maps/search/?api=1&query=Rove+barbería+y+peluquería,+San+Juan+910,+Mar+del+Plata"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#a9773c] to-[#c49257] hover:from-[#c49257] hover:to-[#a9773c] text-white font-semibold text-[11px] transition-all shadow-sm shadow-[#a9773c]/30 flex items-center gap-1 hover:scale-105"
+                        className="shrink-0 px-3 py-1.5 rounded-xl bg-linear-to-r from-[#a9773c] to-[#c49257] hover:from-[#c49257] hover:to-[#a9773c] text-white font-semibold text-[11px] transition-all shadow-sm shadow-[#a9773c]/30 flex items-center gap-1 hover:scale-105"
                       >
                         <span>Cómo llegar</span>
                         <ExternalLink className="w-3 h-3" />
@@ -438,7 +438,7 @@ export default function HomePage() {
               <MotionStaggerItem key={idx}>
                 <div className="group rounded-[2rem] bg-white/45 backdrop-blur-2xl border border-white/70 shadow-[0_8px_32px_0_rgba(169,119,60,0.06)] hover:shadow-[0_16px_40px_0_rgba(169,119,60,0.12)] p-6 sm:p-7 transition-all duration-300 flex flex-col justify-between space-y-6 hover:-translate-y-1">
                   {/* Imagen superior con número indicador */}
-                  <div className="relative aspect-[16/10] rounded-[1.4rem] overflow-hidden bg-slate-100 shadow-inner">
+                  <div className="relative aspect-16/10 rounded-[1.4rem] overflow-hidden bg-slate-100 shadow-inner">
                     <img
                       src={srv.image}
                       alt={srv.title}
@@ -512,7 +512,7 @@ export default function HomePage() {
           <MotionFade delay={0.2}>
             <div className="rounded-[2.2rem] sm:rounded-[2.5rem] bg-white/50 backdrop-blur-2xl border border-white/70 shadow-[0_16px_45px_0_rgba(169,119,60,0.08)] p-8 sm:p-12 lg:p-14 relative overflow-hidden">
               {/* Brillo especular superior */}
-              <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
+              <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white to-transparent opacity-90" />
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
                 {/* IZQUIERDA: COMUNICACIÓN CORPORATIVA & PROPUESTA ON-DEMAND */}
@@ -521,7 +521,7 @@ export default function HomePage() {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
                     {/* Monograma corporativo Rove sobre degradado camel */}
                     <div className="relative group shrink-0">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.6rem] bg-gradient-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] border-2 border-white/90 shadow-lg shadow-[#a9773c]/30 flex items-center justify-center text-white font-bold text-2xl sm:text-3xl select-none group-hover:scale-105 transition-transform duration-300">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.6rem] bg-linear-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] border-2 border-white/90 shadow-lg shadow-[#a9773c]/30 flex items-center justify-center text-white font-bold text-2xl sm:text-3xl select-none group-hover:scale-105 transition-transform duration-300">
                         R
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-amber-100 flex items-center justify-center text-[#a9773c] shadow-xs">
@@ -566,7 +566,7 @@ export default function HomePage() {
                       href="https://wa.me/5491148920091?text=Hola%20Rove%20Barbería,%20nos%20gustaría%20cotizar%20un%20servicio%20para%20un%20evento"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs uppercase tracking-wider px-8 py-4.5 h-auto transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_12px_28px_-6px_rgba(169,119,60,0.45)] hover:shadow-[0_18px_36px_-6px_rgba(169,119,60,0.6)] inline-flex items-center gap-2 border border-white/40"
+                      className="group relative overflow-hidden rounded-2xl bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs uppercase tracking-wider px-8 py-4.5 h-auto transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_12px_28px_-6px_rgba(169,119,60,0.45)] hover:shadow-[0_18px_36px_-6px_rgba(169,119,60,0.6)] inline-flex items-center gap-2 border border-white/40"
                     >
                       <Scissors className="w-4 h-4 stroke-[1.8]" />
                       <span>Cotizar Evento</span>

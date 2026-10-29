@@ -34,9 +34,9 @@ export default async function CancelarReservaPage({
 
   if (!appointment) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-[#faf6f0] via-[#f7f3ec] to-[#f2ede4] text-slate-800 flex items-center justify-center p-4 relative selection:bg-[#a9773c]/20 selection:text-slate-900">
-        <div className="fixed top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-[#a9773c]/15 via-[#c49257]/10 to-transparent blur-[120px] pointer-events-none -z-10" />
-        <div className="fixed bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-[#8d5e2a]/10 via-[#d4a86a]/15 to-transparent blur-[130px] pointer-events-none -z-10" />
+      <main className="min-h-screen bg-linear-to-br from-[#faf6f0] via-[#f7f3ec] to-[#f2ede4] text-slate-800 flex items-center justify-center p-4 relative selection:bg-[#a9773c]/20 selection:text-slate-900">
+        <div className="fixed top-[-10%] right-[-5%] w-125 h-125 rounded-full bg-linear-to-br from-[#a9773c]/15 via-[#c49257]/10 to-transparent blur-[120px] pointer-events-none -z-10" />
+        <div className="fixed bottom-[-10%] left-[-5%] w-125 h-125 rounded-full bg-linear-to-tr from-[#8d5e2a]/10 via-[#d4a86a]/15 to-transparent blur-[130px] pointer-events-none -z-10" />
 
         <div className="max-w-md w-full p-8 rounded-[2rem] bg-white/60 backdrop-blur-2xl border border-white/80 shadow-[0_16px_50px_rgba(169,119,60,0.12)] text-center space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto text-xl font-bold">
@@ -49,7 +49,7 @@ export default async function CancelarReservaPage({
           <div className="pt-2">
             <Link
               href="/"
-              className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-[#a9773c] to-[#c49257] hover:from-[#c49257] hover:to-[#a9773c] text-white font-semibold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#a9773c]/30 hover:scale-[1.02] active:scale-95"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-linear-to-r from-[#a9773c] to-[#c49257] hover:from-[#c49257] hover:to-[#a9773c] text-white font-semibold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#a9773c]/30 hover:scale-[1.02] active:scale-95"
             >
               Ir a Rove Barbería
             </Link>
@@ -63,16 +63,16 @@ export default async function CancelarReservaPage({
   const isCancelled = appointment.status === "cancelled";
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#faf6f0] via-[#f7f3ec] to-[#f2ede4] text-slate-800 flex flex-col items-center justify-center p-4 py-12 relative selection:bg-[#a9773c]/20 selection:text-slate-900">
+    <main className="min-h-screen bg-linear-to-br from-[#faf6f0] via-[#f7f3ec] to-[#f2ede4] text-slate-800 flex flex-col items-center justify-center p-4 py-12 relative selection:bg-[#a9773c]/20 selection:text-slate-900">
       {/* Luces difusas ambiente camel */}
-      <div className="fixed top-[-10%] right-[-5%] w-[550px] h-[550px] rounded-full bg-gradient-to-br from-[#a9773c]/15 via-[#c49257]/10 to-transparent blur-[130px] pointer-events-none -z-10" />
-      <div className="fixed bottom-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#8d5e2a]/10 via-[#d4a86a]/15 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed top-[-10%] right-[-5%] w-137.5 h-137.5 rounded-full bg-linear-to-br from-[#a9773c]/15 via-[#c49257]/10 to-transparent blur-[130px] pointer-events-none -z-10" />
+      <div className="fixed bottom-[-10%] left-[-5%] w-150 h-150 rounded-full bg-linear-to-tr from-[#8d5e2a]/10 via-[#d4a86a]/15 to-transparent blur-[140px] pointer-events-none -z-10" />
 
       {/* Header Logo */}
       <div className="mb-8 text-center">
         <Link href="/" className="inline-flex flex-col items-center group">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] flex items-center justify-center text-white shadow-sm shadow-[#a9773c]/40 font-bold text-xs group-hover:scale-105 transition-transform">
+            <div className="w-8 h-8 rounded-xl bg-linear-to-tr from-[#a9773c] via-[#c49257] to-[#8d5e2a] flex items-center justify-center text-white shadow-sm shadow-[#a9773c]/40 font-bold text-xs group-hover:scale-105 transition-transform">
               R
             </div>
             <span className="font-bold text-lg tracking-[0.2em] text-slate-900 uppercase">
@@ -87,7 +87,7 @@ export default async function CancelarReservaPage({
 
       <div className="max-w-lg w-full rounded-[2.5rem] bg-white/60 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(169,119,60,0.12)] p-6 sm:p-10 space-y-6 relative overflow-hidden">
         {/* Brillo superior */}
-        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+        <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white to-transparent opacity-80" />
 
         <div className="text-center space-y-1.5">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
@@ -168,7 +168,7 @@ export default async function CancelarReservaPage({
             <div>
               <Link
                 href="/#reservar"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-[#a9773c] to-[#c49257] hover:from-[#c49257] hover:to-[#a9773c] text-white font-semibold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#a9773c]/30 hover:scale-[1.02] active:scale-95"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-linear-to-r from-[#a9773c] to-[#c49257] hover:from-[#c49257] hover:to-[#a9773c] text-white font-semibold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#a9773c]/30 hover:scale-[1.02] active:scale-95"
               >
                 Reservar Nuevo Turno
               </Link>

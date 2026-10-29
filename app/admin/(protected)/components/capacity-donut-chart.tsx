@@ -24,7 +24,7 @@ export function CapacityDonutChart({
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="rotate-[-90deg] transition-all duration-500 ease-out"
+        className="-rotate-90 transition-all duration-500 ease-out"
       >
         {/* Círculo de fondo tenue */}
         <circle

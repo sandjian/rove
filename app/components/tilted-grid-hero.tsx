@@ -236,7 +236,7 @@ export function TiltedGridHero({
                     />
                   ) : null}
                   {/* Gradiente de profundidad y sombra de borde suave */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/50 pointer-events-none" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-black/50 pointer-events-none" />
                 </div>
               ))}
             </div>
@@ -245,8 +245,8 @@ export function TiltedGridHero({
       </div>
 
       {/* Gradientes atmosféricos de desvanecimiento superior e inferior para fundir con el fondo general */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#0a0a0c] to-transparent z-[1]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0a0a0c] to-transparent z-[1]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-[#0a0a0c] to-transparent z-1" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-[#0a0a0c] to-transparent z-1" />
 
       {/* Contenido centrado */}
       {children && (

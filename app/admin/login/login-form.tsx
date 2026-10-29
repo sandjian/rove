@@ -76,7 +76,7 @@ export function AdminLoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-gradient-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase py-3.5 shadow-md shadow-[#a9773c]/35 hover:scale-[1.01] active:scale-95 transition-all duration-200 disabled:opacity-50"
+            className="w-full rounded-2xl bg-linear-to-r from-[#a9773c] via-[#c49257] to-[#8d5e2a] text-white font-semibold text-xs tracking-wider uppercase py-3.5 shadow-md shadow-[#a9773c]/35 hover:scale-[1.01] active:scale-95 transition-all duration-200 disabled:opacity-50"
           >
             {loading ? "Accediendo..." : "Entrar al Panel"}
           </button>
