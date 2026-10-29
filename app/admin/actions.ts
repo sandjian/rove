@@ -1,11 +1,13 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { appointments, availabilityWindows, services, emailOutbox } from "@/lib/db/schema";
+import { appointments, availabilityWindows, services } from "@/lib/db/schema";
 import { getAdminSession, setAdminSessionCookie, clearAdminSessionCookie } from "@/lib/security/admin-auth";
-import { encryptOutboxPayload } from "@/lib/security";
+import { renderAdminCancellationEmail } from "@/lib/services/email-outbox/templates";
 
 export interface AdminAppointmentDto {
   id: string;
@@ -173,7 +175,8 @@ export async function completeAppointmentAdminAction(appointmentId: string): Pro
 }
 
 /**
- * Cancela una cita desde el panel administrativo y encola notificación al cliente.
+ * Cancela una cita desde el panel administrativo y despacha la notificación al cliente
+ * en segundo plano mediante `after()` de Next.js 16.
  */
 export async function cancelAppointmentAdminAction(
   appointmentId: string,
@@ -183,7 +186,7 @@ export async function cancelAppointmentAdminAction(
   if (!session) return { success: false, error: "No autorizado." };
 
   try {
-    await db.transaction(async (tx) => {
+    const cancelledAppt = await db.transaction(async (tx) => {
       const [appt] = await tx
         .select()
         .from(appointments)
@@ -195,40 +198,74 @@ export async function cancelAppointmentAdminAction(
       }
 
       if (appt.status === "cancelled") {
-        return;
+        return null;
       }
 
-      await tx
+      const [updated] = await tx
         .update(appointments)
         .set({
           status: "cancelled",
           cancelledAt: sql`clock_timestamp()`,
           updatedAt: sql`clock_timestamp()`,
         })
-        .where(eq(appointments.id, appt.id));
+        .where(eq(appointments.id, appt.id))
+        .returning();
 
-      // Encolar aviso de cancelación administrativa
-      const notificationData = {
-        customerName: appt.customerName,
-        customerEmail: appt.customerEmail,
-        customerPhone: appt.customerPhone,
-        serviceName: appt.serviceNameSnapshot,
-        startAt: appt.startAt.toISOString(),
-        endAt: appt.endAt.toISOString(),
-        recipientEmail: appt.customerEmail,
-        adminReason: reason,
-      };
-
-      const encrypted = encryptOutboxPayload(JSON.stringify(notificationData));
-
-      await tx.insert(emailOutbox).values({
-        appointmentId: appt.id,
-        eventType: "admin_cancellation",
-        recipient: "[ENCRYPTED_IN_PAYLOAD]",
-        payload: encrypted,
-        status: "pending",
-      });
+      return updated;
     });
+
+    if (cancelledAppt) {
+      after(async () => {
+        try {
+          const apiKey = process.env.RESEND_API_KEY?.trim();
+          if (!apiKey) return;
+
+          const resend = new Resend(apiKey);
+          const baseUrl =
+            process.env.BOOKING_BASE_URL ||
+            process.env.NEXT_PUBLIC_APP_URL ||
+            "http://localhost:3000";
+          const fromEmail =
+            process.env.RESEND_FROM_EMAIL ||
+            "Rove Barbería <reservas@rovebarberia.com>";
+
+          const emailContent = renderAdminCancellationEmail({
+            payload: {
+              customerName: cancelledAppt.customerName,
+              serviceName: cancelledAppt.serviceNameSnapshot,
+              startAt: cancelledAppt.startAt.toISOString(),
+              adminReason: reason,
+            },
+            baseUrl,
+          });
+
+          const res = await resend.emails.send(
+            {
+              from: fromEmail,
+              to: cancelledAppt.customerEmail,
+              subject: emailContent.subject,
+              html: emailContent.html,
+              text: emailContent.text,
+            },
+            {
+              idempotencyKey: `cancel-admin-${cancelledAppt.id}`,
+            }
+          );
+
+          if (res.error) {
+            console.error(
+              `[cancelAppointmentAdminAction] Error de Resend (${cancelledAppt.id}):`,
+              res.error.message
+            );
+          }
+        } catch (emailErr) {
+          console.error(
+            "[cancelAppointmentAdminAction] Error enviando correo en segundo plano:",
+            emailErr instanceof Error ? emailErr.message : emailErr
+          );
+        }
+      });
+    }
 
     revalidatePath("/admin");
     return { success: true };

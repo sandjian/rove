@@ -1,5 +1,7 @@
+import { after } from "next/server";
+import { Resend } from "resend";
 import { db } from "../../db";
-import { appointments, emailOutbox } from "../../db/schema";
+import { appointments } from "../../db/schema";
 import {
   getActiveServiceById,
   getAvailabilityQueryData,
@@ -8,8 +10,12 @@ import { calculateAvailableSlots } from "../../availability";
 import {
   generateCancellationToken,
   hashCancellationToken,
-  encryptOutboxPayload,
 } from "../../security";
+import {
+  renderCustomerConfirmationEmail,
+  renderBarberNotificationEmail,
+} from "../email-outbox/templates";
+import type { ResendClientInterface } from "../email-outbox/types";
 import {
   BookingError,
   ServiceNotFoundError,
@@ -26,7 +32,6 @@ import type {
   AppointmentServiceClient,
   TransactionContext,
 } from "./types";
-import type { EncryptedPayload } from "../../security/types";
 
 /**
  * Expresión regular para validar formato básico de correo electrónico.
@@ -160,7 +165,158 @@ function isGistExclusionViolation(error: unknown): boolean {
 }
 
 /**
- * Servicio de Aplicación: Creación Transaccional de Reservas.
+ * Programa una tarea asíncrona en segundo plano utilizando `after()` de Next.js 16
+ * (que extiende el ciclo de vida de la función serverless en Vercel mediante `waitUntil`
+ * después de haber enviado la respuesta a la interfaz).
+ *
+ * Si se ejecuta fuera de un contexto de request de Next.js (ej. tests unitarios o CLI),
+ * hace fallback seguro ejecutando la promesa sin `await`.
+ */
+function runInBackground(task: () => Promise<void>): void {
+  try {
+    after(async () => {
+      try {
+        await task();
+      } catch (error) {
+        console.error(
+          "[createAppointment] Error despachando correos en after():",
+          error instanceof Error ? error.message : error
+        );
+      }
+    });
+  } catch {
+    void task().catch((error) => {
+      console.error(
+        "[createAppointment] Error despachando correos en segundo plano:",
+        error instanceof Error ? error.message : error
+      );
+    });
+  }
+}
+
+/**
+ * Despacha directamente los correos de confirmación (al cliente y opcionalmente al barbero)
+ * mediante Resend sin pasar por la tabla `email_outbox`.
+ */
+export async function dispatchBookingConfirmationEmails(
+  params: {
+    appointmentId: string;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    serviceName: string;
+    serviceDurationMinutes: number;
+    servicePriceAmount: number;
+    currency: string;
+    startAtIso: string;
+    endAtIso: string;
+    cancellationToken: string;
+  },
+  injectedResendClient?: ResendClientInterface
+): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const resend: ResendClientInterface | null =
+    injectedResendClient ??
+    (apiKey ? (new Resend(apiKey) as unknown as ResendClientInterface) : null);
+
+  if (!resend) {
+    return;
+  }
+
+  const baseUrl =
+    process.env.BOOKING_BASE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "http://localhost:3000";
+  const fromEmail =
+    process.env.RESEND_FROM_EMAIL ||
+    "Rove Barbería <reservas@rovebarberia.com>";
+
+  const customerEmailContent = renderCustomerConfirmationEmail({
+    payload: {
+      customerName: params.customerName,
+      customerEmail: params.customerEmail,
+      customerPhone: params.customerPhone,
+      serviceName: params.serviceName,
+      serviceDurationMinutes: params.serviceDurationMinutes,
+      servicePriceAmount: params.servicePriceAmount,
+      currency: params.currency,
+      startAt: params.startAtIso,
+      endAt: params.endAtIso,
+      cancellationToken: params.cancellationToken,
+    },
+    baseUrl,
+  });
+
+  const tasks: Promise<unknown>[] = [
+    resend.emails
+      .send(
+        {
+          from: fromEmail,
+          to: params.customerEmail,
+          subject: customerEmailContent.subject,
+          html: customerEmailContent.html,
+          text: customerEmailContent.text,
+        },
+        {
+          idempotencyKey: `booking-customer-${params.appointmentId}`,
+        }
+      )
+      .then((res) => {
+        if (res.error) {
+          console.error(
+            `[createAppointment] Error de Resend al enviar confirmación al cliente (${params.appointmentId}):`,
+            res.error.message
+          );
+        }
+      }),
+  ];
+
+  const barberEmail = process.env.BARBER_NOTIFICATION_EMAIL?.trim();
+  if (barberEmail && barberEmail.length > 0) {
+    const barberEmailContent = renderBarberNotificationEmail({
+      payload: {
+        customerName: params.customerName,
+        customerEmail: params.customerEmail,
+        customerPhone: params.customerPhone,
+        serviceName: params.serviceName,
+        serviceDurationMinutes: params.serviceDurationMinutes,
+        servicePriceAmount: params.servicePriceAmount,
+        currency: params.currency,
+        startAt: params.startAtIso,
+        endAt: params.endAtIso,
+      },
+    });
+
+    tasks.push(
+      resend.emails
+        .send(
+          {
+            from: fromEmail,
+            to: barberEmail,
+            subject: barberEmailContent.subject,
+            html: barberEmailContent.html,
+            text: barberEmailContent.text,
+          },
+          {
+            idempotencyKey: `booking-barber-${params.appointmentId}`,
+          }
+        )
+        .then((res) => {
+          if (res.error) {
+            console.error(
+              `[createAppointment] Error de Resend al enviar aviso al barbero (${params.appointmentId}):`,
+              res.error.message
+            );
+          }
+        })
+    );
+  }
+
+  await Promise.allSettled(tasks);
+}
+
+/**
+ * Servicio de Aplicación: Creación de Reservas con despacho de correo directo en segundo plano.
  *
  * Ejecuta el flujo completo de confirmación garantizando:
  * 1. Validación estricta de parámetros sin confiar en datos de duración o precio del cliente.
@@ -169,18 +325,20 @@ function isGistExclusionViolation(error: unknown): boolean {
  * 4. Verificación de anticipación mínima (2h) y horizonte móvil (168h / 7 días corridos).
  * 5. Evaluación de disponibilidad real mediante el motor (`calculateAvailableSlots`).
  * 6. Generación de token criptográfico de cancelación y almacenamiento exclusivo de su hash SHA-256.
- * 7. Cifrado simétrico AES-256-GCM del token para la cola de notificaciones (`email_outbox`).
- * 8. Transacción PostgreSQL atómica: inserción de turno confirmado + encolado de notificación.
- * 9. Protección contra solapamientos concurrentes respaldada por la restricción GiST (23P01).
+ * 7. Inserción atómica del turno confirmado respaldada por la restricción GiST (23P01).
+ * 8. Despacho directo de emails vía Resend en segundo plano usando `after()` de Next.js 16
+ *    sin bloquear la respuesta al cliente ni depender de un Cron Job de Outbox.
  *
  * @param input - Datos de la reserva solicitada.
  * @param client - Cliente de base de datos opcional (por defecto: instancia Neon de db).
+ * @param resendClient - Cliente Resend opcional para inyección en pruebas.
  * @returns Reserva confirmada y token en claro para notificación.
  * @throws {BookingError} Errores de dominio tipados ante cualquier violación o conflicto.
  */
 export async function createAppointment(
   input: CreateAppointmentInput,
-  client: AppointmentServiceClient = db
+  client: AppointmentServiceClient = db,
+  resendClient?: ResendClientInterface
 ): Promise<CreateAppointmentResult> {
   // 1. Validar y sanear datos de entrada
   const {
@@ -245,11 +403,11 @@ export async function createAppointment(
   const rawToken = generateCancellationToken();
   const tokenHash = hashCancellationToken(rawToken);
 
-  // 8. Ejecutar persistencia en una única transacción PostgreSQL atómica
+  // 8. Ejecutar persistencia de la reserva en PostgreSQL
+  let newAppointment;
   try {
-    const result = await client.transaction(async (tx: TransactionContext) => {
-      // 8.1 Insertar reserva con estado 'confirmed' y snapshots inmutables
-      const [newAppointment] = await tx
+    newAppointment = await client.transaction(async (tx: TransactionContext) => {
+      const [inserted] = await tx
         .insert(appointments)
         .values({
           serviceId: service.id,
@@ -267,77 +425,8 @@ export async function createAppointment(
         })
         .returning();
 
-      // 8.2 Preparar notificaciones con cifrado de datos en reposo a nivel de aplicación
-      const customerNotificationData = {
-        customerName,
-        customerEmail,
-        customerPhone,
-        serviceName: service.name,
-        serviceDurationMinutes: service.durationMinutes,
-        servicePriceAmount: service.priceAmount,
-        currency: "ARS",
-        startAt: startAt.toISOString(),
-        endAt: endAt.toISOString(),
-        cancellationToken: rawToken,
-        recipientEmail: customerEmail,
-      };
-      const encryptedCustomerPayload = encryptOutboxPayload(
-        JSON.stringify(customerNotificationData)
-      );
-
-      const outboxEntries: Array<{
-        appointmentId: string;
-        eventType: string;
-        recipient: string;
-        payload: EncryptedPayload;
-        status: string;
-      }> = [
-        {
-          appointmentId: newAppointment.id,
-          eventType: "booking_confirmed",
-          recipient: "[ENCRYPTED_IN_PAYLOAD]",
-          payload: encryptedCustomerPayload,
-          status: "pending",
-        },
-      ];
-
-      // Notificación al barbero si está configurada la variable de entorno
-      const barberEmail = process.env.BARBER_NOTIFICATION_EMAIL?.trim();
-      if (barberEmail && barberEmail.length > 0) {
-        const barberNotificationData = {
-          customerName,
-          customerEmail,
-          customerPhone,
-          serviceName: service.name,
-          serviceDurationMinutes: service.durationMinutes,
-          servicePriceAmount: service.priceAmount,
-          currency: "ARS",
-          startAt: startAt.toISOString(),
-          endAt: endAt.toISOString(),
-          recipientEmail: barberEmail,
-        };
-        const encryptedBarberPayload = encryptOutboxPayload(
-          JSON.stringify(barberNotificationData)
-        );
-
-        outboxEntries.push({
-          appointmentId: newAppointment.id,
-          eventType: "booking_confirmed",
-          recipient: "[ENCRYPTED_IN_PAYLOAD]",
-          payload: encryptedBarberPayload,
-          status: "pending",
-        });
-      }
-
-      await tx.insert(emailOutbox).values(outboxEntries);
-
-      return newAppointment;
+      return inserted;
     });
-
-    return {
-      appointment: result,
-      cancellationToken: rawToken,
-    };
   } catch (error) {
     // Manejo y traducción explícita de violación de exclusión GiST por concurrencia
     if (isGistExclusionViolation(error)) {
@@ -355,4 +444,29 @@ export async function createAppointment(
       `Fallo en la persistencia transaccional de la reserva: ${message}`
     );
   }
+
+  // 9. Despachar correos de confirmación en segundo plano usando after() de Next.js 16
+  runInBackground(() =>
+    dispatchBookingConfirmationEmails(
+      {
+        appointmentId: newAppointment.id,
+        customerName,
+        customerEmail,
+        customerPhone,
+        serviceName: service.name,
+        serviceDurationMinutes: service.durationMinutes,
+        servicePriceAmount: service.priceAmount,
+        currency: "ARS",
+        startAtIso: startAt.toISOString(),
+        endAtIso: endAt.toISOString(),
+        cancellationToken: rawToken,
+      },
+      resendClient
+    )
+  );
+
+  return {
+    appointment: newAppointment,
+    cancellationToken: rawToken,
+  };
 }

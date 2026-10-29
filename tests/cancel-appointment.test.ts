@@ -5,13 +5,9 @@ import {
   getAppointmentByCancellationToken,
 } from "../lib/services/appointments/cancel-appointment";
 import { cancelAppointmentAction } from "../app/actions";
-import { hashCancellationToken, decryptOutboxPayload } from "../lib/security";
+import { hashCancellationToken } from "../lib/security";
 import type { Appointment, EmailOutboxItem } from "../lib/db/schema";
 import type { DrizzleDb } from "../lib/db";
-
-// Clave de cifrado requerida para el payload de emailOutbox
-process.env.OUTBOX_ENCRYPTION_KEY =
-  "e83bf6112c2a9c370258167f5b35bfbd2b07e1ba77176d05f32eb7a13dcf8a8b";
 
 function createMockAppointment(overrides?: Partial<Appointment>): Appointment {
   const now = new Date();
@@ -182,31 +178,37 @@ describe("Servicio de Cancelación de Turnos (Fase 4B)", () => {
     assert.equal(mockDb.getOutbox().length, 0);
   });
 
-  it("5. cancelAppointmentByToken cancela con éxito, bloquea con FOR UPDATE y encola email cifrado en outbox", async () => {
+  it("5. cancelAppointmentByToken cancela con éxito, bloquea con FOR UPDATE y despacha email directo vía Resend", async () => {
     const appt = createMockAppointment({
       cancellationTokenHash: validTokenHash,
       status: "confirmed",
     });
     const mockDb = createMockCancelDb([appt]);
 
-    const res = await cancelAppointmentByToken(validToken, mockDb);
+    const sentEmails: Array<{ to: string | string[]; subject: string }> = [];
+    const mockResend = {
+      emails: {
+        send: async (payload: { to: string | string[]; subject: string }) => {
+          sentEmails.push(payload);
+          return { data: { id: "msg-cancel-1" }, error: null };
+        },
+      },
+    };
+
+    const res = await cancelAppointmentByToken(validToken, mockDb, mockResend);
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     assert.equal(res.success, true);
     assert.equal(res.alreadyCancelled, false);
     assert.equal(res.appointment?.status, "cancelled");
     assert.ok(mockDb.wasSelectForUpdateUsed(), "Debe usar FOR UPDATE para prevenir carreras");
 
-    // Verificar outbox encolado
-    const outbox = mockDb.getOutbox();
-    assert.equal(outbox.length, 1);
-    assert.equal(outbox[0].eventType, "customer_cancellation");
-    assert.equal(outbox[0].status, "pending");
-
-    // Verificar que el payload está cifrado con AES-256-GCM y contiene los datos del cliente
-    const decrypted = JSON.parse(decryptOutboxPayload(outbox[0].payload as any));
-    assert.equal(decrypted.customerEmail, "carlos@example.com");
-    assert.equal(decrypted.customerName, "Carlos Tevez");
-    assert.equal(decrypted.serviceName, "Corte Clásico");
+    // Verificar que ya no inserta en outbox y despacha directamente vía Resend
+    assert.equal(mockDb.getOutbox().length, 0);
+    assert.equal(sentEmails.length, 1);
+    assert.equal(sentEmails[0].to, "carlos@example.com");
+    assert.match(sentEmails[0].subject, /Turno cancelado/i);
   });
 });
 

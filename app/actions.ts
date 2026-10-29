@@ -181,8 +181,8 @@ export async function getAvailableSlotsAction(serviceId: string): Promise<{
 }
 
 /**
- * Crea una reserva de forma atómica y transaccional, encolando el email outbox
- * y devolviendo el token de cancelación criptográfico.
+ * Crea una reserva de forma atómica, despacha los correos de confirmación en segundo
+ * plano mediante `after()` de Next.js 16 y devuelve el token de cancelación criptográfico.
  */
 export async function bookAppointmentAction(
   input: BookingSubmissionInput

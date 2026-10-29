@@ -12,17 +12,13 @@ import {
   type AppointmentServiceClient,
   type TransactionContext,
 } from "../lib/services/appointments";
-import { hashCancellationToken, decryptOutboxPayload } from "../lib/security";
+import { hashCancellationToken } from "../lib/security";
 import type {
   Service,
   AvailabilityWindow,
   Appointment,
   EmailOutboxItem,
 } from "../lib/db/schema";
-
-// Clave de prueba para cifrado de outbox (64 caracteres hex no triviales)
-process.env.OUTBOX_ENCRYPTION_KEY =
-  "e83bf6112c2a9c370258167f5b35bfbd2b07e1ba77176d05f32eb7a13dcf8a8b";
 
 /**
  * Generador de cliente simulado para pruebas de servicio transaccional.
@@ -213,7 +209,7 @@ describe("Servicio de Creación Transaccional de Reservas (Fase 4)", () => {
 
     assert.ok(wasTransactionCalled(), "Debe haberse ejecutado en una transacción");
     assert.equal(insertedAppointments.length, 1);
-    assert.equal(insertedOutbox.length, 1);
+    assert.equal(insertedOutbox.length, 0, "Ya no debe insertar en email_outbox");
 
     // Verificación de fin del turno: 15:00 + 45 min = 15:45
     assert.equal(result.appointment.startAt.toISOString(), "2026-10-24T15:00:00.000Z");
@@ -425,13 +421,23 @@ describe("Servicio de Creación Transaccional de Reservas (Fase 4)", () => {
     );
   });
 
-  // 7. Persistencia del hash del token, nunca del token en claro
-  it("7. persiste únicamente el hash SHA-256 del token y cifra el payload en email_outbox", async () => {
+  // 7. Persistencia del hash del token, nunca del token en claro, y envío directo vía Resend
+  it("7. persiste únicamente el hash SHA-256 del token y despacha email directo vía Resend", async () => {
     const { client, insertedAppointments, insertedOutbox } =
       createMockAppointmentClient({
         service: baseService,
         windows: [sampleWindow],
       });
+
+    const sentEmails: Array<{ to: string | string[]; subject: string; html: string }> = [];
+    const mockResend = {
+      emails: {
+        send: async (payload: { to: string | string[]; subject: string; html: string }) => {
+          sentEmails.push(payload);
+          return { data: { id: "msg-123" }, error: null };
+        },
+      },
+    };
 
     const result = await createAppointment(
       {
@@ -442,11 +448,14 @@ describe("Servicio de Creación Transaccional de Reservas (Fase 4)", () => {
         customerPhone: "+542235551234",
         referenceNow: fixedNow,
       },
-      client
+      client,
+      mockResend
     );
 
+    // Esperar un tick para que finalice la tarea asíncrona en segundo plano
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     const savedAppointment = insertedAppointments[0];
-    const outboxRecord = insertedOutbox[0];
 
     // Token en claro devuelto: 64 caracteres hex
     assert.equal(typeof result.cancellationToken, "string");
@@ -459,37 +468,17 @@ describe("Servicio de Creación Transaccional de Reservas (Fase 4)", () => {
       hashCancellationToken(result.cancellationToken)
     );
 
-    // En email_outbox, el payload COMPLETO está cifrado con AES-256-GCM (Zero-Knowledge en reposo)
-    const payload = outboxRecord.payload as unknown as {
-      iv: string;
-      tag: string;
-      ciphertext: string;
-      customerName?: string;
-      customerPhone?: string;
-    };
-    assert.ok(payload.iv);
-    assert.ok(payload.tag);
-    assert.ok(payload.ciphertext);
-    // Ningún dato personal existe en texto plano en el payload persistido
-    assert.equal(payload.customerName, undefined);
-    assert.equal(payload.customerPhone, undefined);
+    // Ya no se utiliza email_outbox
+    assert.equal(insertedOutbox.length, 0);
 
-    // Descifrar el payload produce los datos completos y el token original
-    const decryptedRaw = decryptOutboxPayload(payload);
-    const parsedData = JSON.parse(decryptedRaw) as {
-      customerName: string;
-      customerEmail: string;
-      customerPhone: string;
-      cancellationToken: string;
-    };
-    assert.equal(parsedData.customerName, "Lucas Silva");
-    assert.equal(parsedData.customerEmail, "lucas@example.com");
-    assert.equal(parsedData.customerPhone, "+542235551234");
-    assert.equal(parsedData.cancellationToken, result.cancellationToken);
+    // Se despacha el correo de confirmación directamente con el enlace de cancelación
+    assert.equal(sentEmails.length, 1);
+    assert.equal(sentEmails[0].to, "lucas@example.com");
+    assert.ok(sentEmails[0].html.includes(result.cancellationToken));
   });
 
   // 8. Inserción atómica dentro de la misma transacción
-  it("8. inserta la reserva y la notificación dentro de la misma transacción", async () => {
+  it("8. inserta la reserva en un único commit sin depender de email_outbox", async () => {
     let commitCount = 0;
     const { client, insertedAppointments, insertedOutbox } =
       createMockAppointmentClient({
@@ -514,38 +503,41 @@ describe("Servicio de Creación Transaccional de Reservas (Fase 4)", () => {
 
     assert.equal(commitCount, 1, "Debe comprometerse en un único commit");
     assert.equal(insertedAppointments.length, 1);
-    assert.equal(insertedOutbox.length, 1);
+    assert.equal(insertedOutbox.length, 0);
   });
 
-  // 9. Rollback completo si falla la inserción de una notificación
-  it("9. aborta y revierte la reserva si falla la inserción de email_outbox", async () => {
-    let rollbackExecuted = false;
-    const { client } = createMockAppointmentClient({
+  // 9. Resiliencia ante fallo de Resend en segundo plano (no revierte la reserva confirmada)
+  it("9. no bloquea ni revierte la reserva si falla el envío de correo en segundo plano", async () => {
+    const { client, insertedAppointments } = createMockAppointmentClient({
       service: baseService,
       windows: [sampleWindow],
-      throwOnOutboxInsert: new Error("Outbox table write failure"),
-      onRollback: () => {
-        rollbackExecuted = true;
-      },
     });
 
-    await assert.rejects(
-      async () =>
-        createAppointment(
-          {
-            serviceId,
-            startAt: new Date("2026-10-24T15:00:00.000Z"),
-            customerName: "Lucas Silva",
-            customerEmail: "lucas@example.com",
-            customerPhone: "+542235551234",
-            referenceNow: fixedNow,
-          },
-          client
-        ),
-      BookingPersistenceError
+    const failingResend = {
+      emails: {
+        send: async () => ({
+          data: null,
+          error: { message: "Resend temporary outage", statusCode: 503 },
+        }),
+      },
+    };
+
+    const result = await createAppointment(
+      {
+        serviceId,
+        startAt: new Date("2026-10-24T15:00:00.000Z"),
+        customerName: "Lucas Silva",
+        customerEmail: "lucas@example.com",
+        customerPhone: "+542235551234",
+        referenceNow: fixedNow,
+      },
+      client,
+      failingResend
     );
 
-    assert.ok(rollbackExecuted, "El rollback debe ejecutarse si falla outbox");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    assert.equal(insertedAppointments.length, 1);
+    assert.equal(result.appointment.status, "confirmed");
   });
 
   // 10. Conversión correcta de la violación GiST 23P01 a ConcurrentBookingConflictError
@@ -653,16 +645,26 @@ describe("Servicio de Creación Transaccional de Reservas (Fase 4)", () => {
   });
 
   // 13. Notificación al barbero si está configurada la variable BARBER_NOTIFICATION_EMAIL
-  it("13. encola notificación para el barbero únicamente si BARBER_NOTIFICATION_EMAIL está configurada", async () => {
+  it("13. despacha notificación para el barbero únicamente si BARBER_NOTIFICATION_EMAIL está configurada", async () => {
     const originalBarber = process.env.BARBER_NOTIFICATION_EMAIL;
 
     try {
       process.env.BARBER_NOTIFICATION_EMAIL = "barbero@rovebarberia.com";
 
-      const { client, insertedOutbox } = createMockAppointmentClient({
+      const { client } = createMockAppointmentClient({
         service: baseService,
         windows: [sampleWindow],
       });
+
+      const recipients: Array<string | string[]> = [];
+      const mockResend = {
+        emails: {
+          send: async (payload: { to: string | string[] }) => {
+            recipients.push(payload.to);
+            return { data: { id: "msg-456" }, error: null };
+          },
+        },
+      };
 
       await createAppointment(
         {
@@ -673,21 +675,15 @@ describe("Servicio de Creación Transaccional de Reservas (Fase 4)", () => {
           customerPhone: "+542235551234",
           referenceNow: fixedNow,
         },
-        client
+        client,
+        mockResend
       );
 
-      assert.equal(insertedOutbox.length, 2);
-      // El campo recipient en reposo está protegido con marcador [ENCRYPTED_IN_PAYLOAD]
-      for (const item of insertedOutbox) {
-        assert.equal(item.recipient, "[ENCRYPTED_IN_PAYLOAD]");
-      }
-      // Los destinatarios reales se obtienen descifrando el payload a nivel de aplicación
-      const decryptedRecipients = insertedOutbox.map((o) => {
-        const decryptedJson = JSON.parse(decryptOutboxPayload(o.payload as { iv: string; tag: string; ciphertext: string }));
-        return decryptedJson.recipientEmail;
-      });
-      assert.ok(decryptedRecipients.includes("lucas@example.com"));
-      assert.ok(decryptedRecipients.includes("barbero@rovebarberia.com"));
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      assert.equal(recipients.length, 2);
+      assert.ok(recipients.includes("lucas@example.com"));
+      assert.ok(recipients.includes("barbero@rovebarberia.com"));
     } finally {
       process.env.BARBER_NOTIFICATION_EMAIL = originalBarber;
     }
